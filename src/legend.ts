@@ -2,7 +2,7 @@
 import { EDU } from './edu';
 import { maximumRadius, type Orbital } from './math';
 import { monoColor, phaseColor } from './phasecolor';
-import { BOHR_NM, columnDensityAt, sci, timePhase } from './physics';
+import { BOHR_NM, sci, timePhase, valueAtIntensity } from './physics';
 
 const BAR_H = 10;
 const WHEEL_INTENSITY = 0.8;
@@ -61,8 +61,14 @@ export class Legend {
     this.header.textContent = `${EDU[this.lang].legend} ${this.collapsed ? '▸' : '▾'}`;
   }
 
-  /** @param sectionK  brightness constant k of the section view, or null for projection */
-  update(o: Orbital, colorBlind: number, lang: 'en' | 'ja', sectionK: number | null = null): void {
+  /**
+   * @param section  whether the cross-section view is shown
+   * @param k  brightness constant: intensity = 1 − exp(−k·value), value = ∫|ψ|²ds or |ψ|²
+   * @param common  whether the brightness scale is common to all orbitals
+   */
+  update(o: Orbital, colorBlind: number, lang: 'en' | 'ja', section: boolean, k: number,
+    common: boolean): void {
+    const sectionK = section ? k : null;
     const T = EDU[lang];
     const changedColor = colorBlind !== this.colorBlind;
     this.lang = lang;
@@ -82,11 +88,11 @@ export class Legend {
         (sectionK !== null ? `<br>${T.legendSectionNote}` : '') + '</small>';
     }
 
-    const section = sectionK !== null;
-    this.densityText.innerHTML = section ? T.legendSectionDensity : T.legendDensity;
+    this.densityText.innerHTML = (section ? T.legendSectionDensity : T.legendDensity) +
+      `<br><small>${common ? T.legendCommon : T.legendPerOrbital}</small>`;
     const parts = ['<span style="left:0">0</span>'];
     for (const i of TICKS) {
-      const value = section ? -Math.log(1 - i) / sectionK : columnDensityAt(o, i);
+      const value = valueAtIntensity(k, i);
       parts.push(`<span style="left:${i * 100}%">${sci(value)}</span>`);
     }
     parts.push(`<span class="unit">${section ? T.legendSectionUnit : T.legendUnit}</span>`);
@@ -108,10 +114,10 @@ export class Legend {
   }
 
   /** Move the ± markers of real orbitals with the time-dependent phase. */
-  tick(millis: number): void {
+  tick(millis: number, phaseSign: number): void {
     const o = this.orbital;
     if (!o || !o.color || !o.real) return;
-    const a = timePhase(o.n, millis);
+    const a = timePhase(o.n, millis, phaseSign);
     const r = this.wheelSize / 2 - 8;
     const [plus, minus] = this.markers.children as unknown as HTMLElement[];
     // Canvas y grows downwards; phase angle grows counter-clockwise

@@ -24,6 +24,14 @@ import type { Settings } from './settings';
 
 type GL = WebGL2RenderingContext;
 
+/** Web addition: brightness and colour-flow options */
+export interface ViewParams {
+  /** b in the projection intensity 1 − exp(−b ∫|ψ|² ds) (original: R_max²/2) */
+  brightness: number;
+  /** +1: phase advances as e^{+i|E|t/ħ} (original); −1: reversed (flows with the current) */
+  phaseSign: number;
+}
+
 /** Web addition: parameters of the cross-section view */
 export interface SectionParams {
   /** Unit normal of the plane, pointing away from the camera (orbital coordinates) */
@@ -307,6 +315,7 @@ export class OrbitalRenderer {
   private readonly fbColor: WebGLFramebuffer;
   private readonly fbMono: WebGLFramebuffer;
   private lastInverseTransform: Float32Array = new Float32Array(16);
+  private lastBrightness = 0;
   private integratedOrbital: Orbital | null = null;
   private outputResized = true;
 
@@ -496,24 +505,28 @@ export class OrbitalRenderer {
   /** Equivalent of onDrawFrame. */
   draw(
     orbital: Orbital, quadratureData: Float32Array, transform: Float32Array<ArrayBuffer>, millis: number,
-    lineWidth: number, section: SectionParams | null = null,
+    lineWidth: number, section: SectionParams | null, view: ViewParams,
   ): void {
     this.data.load(orbital, quadratureData);
     if (section) {
       this.drawSection(invertM(transform), section);
       const tex = orbital.color ? this.sectionColor : this.sectionMono;
-      this.drawScreen(millis, tex, this.width, this.height);
+      this.drawScreen(millis, tex, this.width, this.height, view.phaseSign);
     } else {
-      this.integrate(invertM(transform));
+      this.integrate(invertM(transform), view.brightness);
       const tex = orbital.color ? this.outColor : this.outMono;
-      this.drawScreen(millis, tex, this.integrationWidth, this.integrationHeight);
+      this.drawScreen(millis, tex, this.integrationWidth, this.integrationHeight, view.phaseSign);
     }
     if (this.settings.showAxes) this.drawAxes(transform, lineWidth);
   }
 
-  private integrate(inverseTransform: Float32Array): void {
+  private integrate(inverseTransform: Float32Array, brightness: number): void {
     const gl = this.gl;
     let needToIntegrate = false;
+    if (brightness !== this.lastBrightness) {
+      needToIntegrate = true;
+      this.lastBrightness = brightness;
+    }
     if (!inverseTransform.every((v, i) => v === this.lastInverseTransform[i])) {
       needToIntegrate = true;
       this.lastInverseTransform = inverseTransform;
@@ -533,6 +546,7 @@ export class OrbitalRenderer {
     gl.viewport(0, 0, this.integrationWidth, this.integrationHeight);
     gl.clearBufferiv(gl.COLOR, 0, new Int32Array([0, 0, 0, 0]));
     this.data.setupForIntegration(p);
+    p.set1f('fBrightness', brightness);
     gl.uniformMatrix4fv(p.loc('inverseTransform'), false, inverseTransform);
     gl.bindVertexArray(this.vaoRect);
     gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
@@ -559,7 +573,9 @@ export class OrbitalRenderer {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
 
-  private drawScreen(millis: number, texture: Texture, texW: number, texH: number): void {
+  private drawScreen(
+    millis: number, texture: Texture, texW: number, texH: number, phaseSign: number,
+  ): void {
     const gl = this.gl;
     const o = this.data.orbital!;
     const p = o.color ? this.programScreenColor : this.programScreenMono;
@@ -572,7 +588,7 @@ export class OrbitalRenderer {
     gl.uniform2f(p.loc('texSize'), texW, texH);
     gl.uniform2i(p.loc('upperClamp'), texW - 1, texH - 1);
     const period = o.n * o.n * 1000; // ms
-    const t = (2 * Math.PI * (millis % period)) / period;
+    const t = (phaseSign * 2 * Math.PI * (millis % period)) / period;
     gl.uniformMatrix2fv(p.loc('colorRotation'), false,
       new Float32Array([Math.cos(t), Math.sin(t), -Math.sin(t), Math.cos(t)]));
     gl.uniform1i(p.loc('colorBlindMode'), this.settings.colorBlind);

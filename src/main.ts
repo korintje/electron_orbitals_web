@@ -10,7 +10,10 @@ import { Legend } from './legend';
 import {
   maximumDensity, maximumRadius, orbitalEquals, RadialFunction, type Orbital,
 } from './math';
-import { loadQuadrature, OrbitalRenderer, type SectionParams } from './renderer';
+import { brightnessScale } from './physics';
+import {
+  loadQuadrature, OrbitalRenderer, type SectionParams, type ViewParams,
+} from './renderer';
 import { OrbitalSelector, orbitalNameHtml } from './selector';
 import { loadSettings, saveSettings, type Language } from './settings';
 
@@ -132,8 +135,9 @@ function drawFrame(): void {
   const millis = pauseTime > 0 ? pauseTime : Date.now();
   const section = sectionParams(current.orbital);
   if (section) selector.setPlaneLabel(planeLabel(section));
-  renderer.draw(current.orbital, current.data, transform, millis, lineWidth(), section);
-  legend.tick(millis);
+  const view = viewParams(current.orbital);
+  renderer.draw(current.orbital, current.data, transform, millis, lineWidth(), section, view);
+  legend.tick(millis, view.phaseSign);
   if (current.orbital.color && pauseTime === 0) requestRender();
 }
 
@@ -142,16 +146,36 @@ function drawFrame(): void {
 
 const maxDensityCache = new Map<string, number>();
 
-/** Brightness constant k of the section view: intensity = 1 − exp(−k|ψ|²) */
-function sectionK(o: Orbital): number {
+/** Reference orbital (2p_z) of the common brightness scale */
+const REFERENCE_ORBITAL: Orbital = { n: 2, l: 1, m: 0, real: true, color: true };
+
+function maxDensity(o: Orbital): number {
   const key = `${o.n},${o.l},${o.m},${o.real}`;
   let rho = maxDensityCache.get(key);
   if (rho === undefined) {
     rho = maximumDensity(o);
     maxDensityCache.set(key, rho);
   }
-  // Default: the densest point reaches 1 − e⁻¹⁰
-  return Math.pow(10, selector.sectionGain + 1) / rho;
+  return rho;
+}
+
+/** Brightness constant k of the section view: intensity = 1 − exp(−k|ψ|²) */
+function sectionK(o: Orbital): number {
+  // Default: the densest point (of this orbital, or of 2p_z for the common scale)
+  // reaches 1 − e⁻¹⁰
+  const ref = selector.commonScale ? REFERENCE_ORBITAL : o;
+  return Math.pow(10, selector.gain + 1) / maxDensity(ref);
+}
+
+/** Brightness constant b of the projection view: intensity = 1 − exp(−b ∫|ψ|² ds) */
+function projectionB(o: Orbital): number {
+  // Original app: R_max²/2 of the orbital shown
+  const ref = selector.commonScale ? REFERENCE_ORBITAL : o;
+  return Math.fround(Math.pow(10, selector.gain) * brightnessScale(ref));
+}
+
+function viewParams(o: Orbital): ViewParams {
+  return { brightness: projectionB(o), phaseSign: selector.flowWithCurrent ? -1 : 1 };
 }
 
 function sectionParams(o: Orbital): SectionParams | null {
@@ -508,8 +532,9 @@ infoClose.addEventListener('click', () => toggleInfo(false));
 
 function updateEdu(o: Orbital): void {
   legend.root.classList.toggle('hidden', !settings.showLegend);
-  legend.update(o, settings.colorBlind, lang, selector.section ? sectionK(o) : null);
-  legend.tick(pauseTime > 0 ? pauseTime : Date.now());
+  legend.update(o, settings.colorBlind, lang, selector.section,
+    selector.section ? sectionK(o) : projectionB(o), selector.commonScale);
+  legend.tick(pauseTime > 0 ? pauseTime : Date.now(), selector.flowWithCurrent ? -1 : 1);
   if (!infoPanel.classList.contains('hidden')) {
     infoTitle.textContent = EDU[lang].menuInfo;
     infoBody.innerHTML = infoHtml(o, orbitalNameHtml({ qN: o.n, qL: o.l, qM: o.m, real: o.real }), lang);

@@ -76,7 +76,7 @@ parallel to the screen. Brightness is |&psi;|&sup2; on the plane and colour is t
 so nodes (&psi; = 0) appear as dark lines. Double tap to align the plane with the xy, yz or
 zx plane. The sliders move the plane and change the brightness; double click a slider to reset it.</li>
 <li>Brightness is the probability density |&psi;|&sup2; summed along the line of sight,
-compressed so that it never saturates. It is scaled separately for each orbital.
+compressed so that it never saturates. It is scaled separately for each orbital, unless the brightness scale is set to "Common".
 The palette button switches between this brightness with the phase as colour, and the
 brightness alone (black and white).</li>
 <li>Colour is the phase arg &psi; of the wave function (see the colour wheel in the legend).
@@ -86,7 +86,8 @@ The probability density itself does not change. The direction of this flow is a
 phase velocity, which depends on where the zero of energy is chosen. With the zero at the
 ionisation limit, as here, the colours of a complex orbital with m &gt; 0 flow opposite to
 the electron's probability current. So the colour flow does not show the direction of the
-electron's motion directly.</li>
+electron's motion directly. Set the colour flow to "With current" to reverse the rotation
+(zero of energy lowered so that E &gt; 0); the colours then flow with the probability current.</li>
 </ul>
 <p class="end"></p>`;
 
@@ -140,9 +141,9 @@ ${wiki('化学', '化学', 'ja')}でよく扱われます。</p>
 <li>3 つの数字は量子数 <i>n</i>(主量子数)、<i>l</i>(方位量子数)、<i>m</i>(磁気量子数)です。&#x24d8; ボタンで、表示中の軌道のエネルギー・角運動量・節・大きさを確認できます。</li>
 <li>各画素は視線方向に積算した値を表す投影像(X 線写真のようなもの)で、断面図ではありません。</li>
 <li>はさみのボタンで断面表示に切り替わり、画面に平行な平面上の &psi; を表示します。明るさは平面上の |&psi;|&sup2;、色は位相で、節 (&psi; = 0) が暗い線として見えます。ダブルタップで xy・yz・zx 平面に揃います。スライダーで平面の位置と明るさを変えられます(ダブルクリックで元に戻ります)。</li>
-<li>明るさは確率密度 |&psi;|&sup2; を視線方向に積算したもので、飽和しないように圧縮しています。軌道ごとに明るさの基準が異なります。パレットボタンで、色付き(位相＋確率密度)と白黒(確率密度のみ)を切り替えます。</li>
+<li>明るさは確率密度 |&psi;|&sup2; を視線方向に積算したもので、飽和しないように圧縮しています。標準では軌道ごとに明るさの基準が異なりますが、「明るさの基準」を「全軌道共通」にすると軌道どうしで比較できます。パレットボタンで、色付き(位相＋確率密度)と白黒(確率密度のみ)を切り替えます。</li>
 <li>色は波動関数の位相 arg &psi; です(凡例の色相環を参照)。実関数 (&#x211d;) では &psi; の符号 + と &minus; の 2 色になります。</li>
-<li>色が流れるのは、位相が e<sup>&minus;iEt/&hbar;</sup> で時間とともに回転するためで、確率密度そのものは変化しません。この流れの向きは位相速度で、エネルギーの基準の取り方に依存します。ここでは電離極限をエネルギー 0 としているため、m &gt; 0 の複素関数では電子の確率の流れと逆向きに見えます。原作のヘルプにある「色の動く向き = 電子の運動の向き」は、厳密にはこの意味で注意が必要です。</li>
+<li>色が流れるのは、位相が e<sup>&minus;iEt/&hbar;</sup> で時間とともに回転するためで、確率密度そのものは変化しません。この流れの向きは位相速度で、エネルギーの基準の取り方に依存します。ここでは電離極限をエネルギー 0 としているため、m &gt; 0 の複素関数では電子の確率の流れと逆向きに見えます。原作のヘルプにある「色の動く向き = 電子の運動の向き」は、厳密にはこの意味で注意が必要です。「色の流れ」を「確率の流れ」にすると回転が逆になり(エネルギーの基準を下げて E &gt; 0 とした場合に相当)、色は確率の流れと同じ向きに流れます。</li>
 </ul>
 <p class="end"></p>`;
 

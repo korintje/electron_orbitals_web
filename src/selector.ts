@@ -82,8 +82,18 @@ export class OrbitalSelector {
   section = false;
   /** Plane position as a fraction of R_max, in [−1, 1] */
   sectionOffset = 0;
-  /** log10 of the brightness gain of the section view, relative to the default */
-  sectionGain = 0;
+  /** log10 of the brightness gain (both views), relative to the default */
+  gain = 0;
+  /** Web addition: same brightness scale for all orbitals instead of per orbital */
+  commonScale = false;
+  /** Web addition: rotate the phase so that colours flow with the probability current */
+  flowWithCurrent = false;
+  private readonly sectionRows = document.createElement('div');
+  private readonly scaleLabel = document.createElement('span');
+  private readonly flowLabel = document.createElement('span');
+  private readonly scaleButtons: HTMLButtonElement[] = [];
+  private readonly flowButtons: HTMLButtonElement[] = [];
+  private flowRow!: HTMLElement;
   private readonly sectionChanger = button('icon', '');
   private readonly sectionCaption = document.createElement('div');
   readonly sectionPanel = document.createElement('div');
@@ -222,7 +232,7 @@ export class OrbitalSelector {
   }
 
   private buildSectionPanel(): void {
-    this.sectionPanel.className = 'section-panel hidden';
+    this.sectionPanel.className = 'section-panel';
     this.planeLabel.className = 'plane-label';
     const row = (label: HTMLElement, slider: HTMLInputElement, value: HTMLElement,
       min: number, max: number, step: number, get: () => number, set: (v: number) => void) => {
@@ -252,12 +262,42 @@ export class OrbitalSelector {
       r.append(label, slider, value, resetButton);
       return r;
     };
-    this.sectionPanel.append(
+    // Two-way choice shown as a segmented control
+    const segmented = (label: HTMLElement, buttons: HTMLButtonElement[],
+      get: () => boolean, set: (v: boolean) => void) => {
+      const r = document.createElement('div');
+      r.className = 'seg-row';
+      label.className = 'slider-label';
+      const group = document.createElement('div');
+      group.className = 'segmented';
+      for (const v of [false, true]) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.addEventListener('click', () => {
+          if (get() === v) return;
+          set(v);
+          this.orbitalChanged();
+        });
+        buttons.push(b);
+        group.append(b);
+      }
+      r.append(label, group);
+      return r;
+    };
+    this.sectionRows.append(
       this.planeLabel,
       row(this.offsetLabel, this.offsetSlider, this.offsetValue, -1, 1, 0.005,
         () => this.sectionOffset, (v) => (this.sectionOffset = v)),
+    );
+    this.flowRow = segmented(this.flowLabel, this.flowButtons, () => this.flowWithCurrent,
+      (v) => (this.flowWithCurrent = v));
+    this.sectionPanel.append(
+      this.sectionRows,
       row(this.gainLabel, this.gainSlider, this.gainValue, -2, 2, 0.05,
-        () => this.sectionGain, (v) => (this.sectionGain = v)),
+        () => this.gain, (v) => (this.gain = v)),
+      segmented(this.scaleLabel, this.scaleButtons, () => this.commonScale,
+        (v) => (this.commonScale = v)),
+      this.flowRow,
     );
   }
 
@@ -289,13 +329,25 @@ export class OrbitalSelector {
     this.sectionCaption.innerHTML = this.section
       ? `${T.section}<small>${T.sectionSub}</small>`
       : `${T.projection}<small>${T.projectionSub}</small>`;
-    this.sectionPanel.classList.toggle('hidden', !this.section);
+    this.sectionRows.classList.toggle('hidden', !this.section);
+    this.scaleLabel.textContent = T.scaleLabel;
+    this.flowLabel.textContent = T.flowLabel;
+    T.scaleOptions.forEach((t, i) => {
+      this.scaleButtons[i].textContent = t;
+      this.scaleButtons[i].classList.toggle('active', this.commonScale === (i === 1));
+    });
+    T.flowOptions.forEach((t, i) => {
+      this.flowButtons[i].textContent = t;
+      this.flowButtons[i].classList.toggle('active', this.flowWithCurrent === (i === 1));
+    });
+    this.flowRow.title = T.flowTitle;
+    this.flowRow.classList.toggle('dim', !this.color);
     this.offsetLabel.textContent = T.sectionOffset;
     this.gainLabel.textContent = T.sectionGain;
     this.offsetValue.textContent = `${(this.sectionOffset * this.rmax).toFixed(1)} a₀`;
-    const g = Math.pow(10, this.sectionGain);
+    const g = Math.pow(10, this.gain);
     const T2 = EDU[this.lang];
-    [this.sectionOffset, this.sectionGain].forEach((v, i) => {
+    [this.sectionOffset, this.gain].forEach((v, i) => {
       const b = this.resetButtons[i];
       if (!b) return;
       b.disabled = v === 0;

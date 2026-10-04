@@ -35,9 +35,9 @@ export function brightnessScale(o: Orbital): number {
   return Math.fround((r * r) / 2);
 }
 
-/** ∫|ψ|² ds (a₀⁻²) that gives displayed intensity I */
-export function columnDensityAt(o: Orbital, intensity: number): number {
-  return -Math.log(1 - intensity) / brightnessScale(o);
+/** Value of ∫|ψ|² ds or |ψ|² that gives displayed intensity I = 1 − exp(−k·value) */
+export function valueAtIntensity(k: number, intensity: number): number {
+  return -Math.log(1 - intensity) / k;
 }
 
 /** Phase rotation period of the display, in seconds */
@@ -46,9 +46,9 @@ export function displayPeriod(n: number): number {
 }
 
 /** Phase angle added by time evolution at `millis` (same as ScreenDrawer) */
-export function timePhase(n: number, millis: number): number {
+export function timePhase(n: number, millis: number, sign = 1): number {
   const period = n * n * 1000;
-  return (2 * Math.PI * (millis % period)) / period;
+  return (sign * 2 * Math.PI * (millis % period)) / period;
 }
 
 /** Number in the form 5.6×10⁻⁴ (HTML) */
