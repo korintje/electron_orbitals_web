@@ -572,4 +572,6 @@ applyLayout();
 applyLanguage();
 resizeObserver.observe(canvas);
 selector.orbitalChanged();
+// Wide screens with room to spare: show "About this orbital" docked on the right from the start
+if (wide && window.matchMedia('(min-width: 1200px)').matches) toggleInfo(true);
 void createRenderer();

@@ -1080,3 +1080,25 @@ button {
 #app.wide .panel-bar {
   display: none;
 }
+
+/* Wide screens with room to spare: the info panel is docked on the right and the orbital
+   view shrinks to the space between the sidebar and the panel */
+@media (min-width: 1200px) {
+  #app.wide.info-open:not(.fullscreen) #orbital-view,
+  #app.wide.info-open:not(.fullscreen) #orbital-tools {
+    width: calc(100% - 360px - 400px);
+  }
+
+  #app.wide.info-open .info-panel {
+    top: 0;
+    width: 400px;
+    box-shadow: none;
+    border-left: 1px solid #222;
+    background: #0c0c0c;
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  #app.wide.fullscreen .info-panel {
+    display: none;
+  }
+}
