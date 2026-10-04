@@ -58,13 +58,33 @@ so as to keep the electrons farther away from each other.</p>
 ${wiki('Complex_number#Polar_form', 'argument')}
 of the electron's wave function.
 The direction the color moves conveys the direction of the electron's motion.</p>
-<p class="end">In actual orbitals, the phase is constantly changing.
+<p>In actual orbitals, the phase is constantly changing.
 The rate depends on the electron's ${wiki('Binding_energy', 'binding energy')},
 which is largest for the inner electrons and decreases for the outer shells.
 To make this visible, time has been slowed down by a factor of 3 quadrillion
 from what it would be in an actual atom.
 (For comparison, the size of the atom has been enlarged
-by "only" a factor of about a billion.)</p>`;
+by "only" a factor of about a billion.)</p>
+<h3>How to read the image (added in the web version)</h3>
+<ul>
+<li>The three numbers are the quantum numbers <i>n</i> (principal), <i>l</i> (azimuthal) and
+<i>m</i> (magnetic). Tap &#x24d8; for details of the orbital shown: energy, angular momentum, nodes and size.</li>
+<li>Each pixel adds up the orbital along its line of sight, so the image is a projection
+(like an X-ray image), not a cross-section.</li>
+<li>Brightness is the probability density |&psi;|&sup2; summed along the line of sight,
+compressed so that it never saturates. It is scaled separately for each orbital.
+The palette button switches between this brightness with the phase as colour, and the
+brightness alone (black and white).</li>
+<li>Colour is the phase arg &psi; of the wave function (see the colour wheel in the legend).
+For real (&#x211d;) orbitals there are only two colours, the sign + and &minus; of &psi;.</li>
+<li>The colours flow because the phase rotates in time as e<sup>&minus;iEt/&hbar;</sup>.
+The probability density itself does not change. The direction of this flow is a
+phase velocity, which depends on where the zero of energy is chosen. With the zero at the
+ionisation limit, as here, the colours of a complex orbital with m &gt; 0 flow opposite to
+the electron's probability current. So the colour flow does not show the direction of the
+electron's motion directly.</li>
+</ul>
+<p class="end"></p>`;
 
 const helpJa = `
 <h3>使い方</h3>
@@ -106,11 +126,20 @@ ${wiki('化学', '化学', 'ja')}でよく扱われます。</p>
 <h3>色は何を表していて、なぜ変化するのですか?</h3>
 <p>このアプリでは、電子の波動関数の位相、つまり${wiki('複素数#極形式', '偏角', 'ja')}を色で表しています。
 色が動く向きは、電子が運動する向きを表しています。</p>
-<p class="end">実際の軌道では、位相は絶えず変化しています。
+<p>実際の軌道では、位相は絶えず変化しています。
 その速さは電子の${wiki('結合エネルギー', '束縛エネルギー', 'ja')}によって決まり、
 内側の電子ほど大きく、外側の殻ほど小さくなります。
 これを目に見えるようにするため、時間の進み方を実際の原子の 3000 兆分の 1 に遅くしています。
-(ちなみに、原子の大きさは「たった」10 億倍ほどに拡大しているだけです。)</p>`;
+(ちなみに、原子の大きさは「たった」10 億倍ほどに拡大しているだけです。)</p>
+<h3>画面の読み方(Web 版で追加)</h3>
+<ul>
+<li>3 つの数字は量子数 <i>n</i>(主量子数)、<i>l</i>(方位量子数)、<i>m</i>(磁気量子数)です。&#x24d8; ボタンで、表示中の軌道のエネルギー・角運動量・節・大きさを確認できます。</li>
+<li>各画素は視線方向に積算した値を表す投影像(X 線写真のようなもの)で、断面図ではありません。</li>
+<li>明るさは確率密度 |&psi;|&sup2; を視線方向に積算したもので、飽和しないように圧縮しています。軌道ごとに明るさの基準が異なります。パレットボタンで、色付き(位相＋確率密度)と白黒(確率密度のみ)を切り替えます。</li>
+<li>色は波動関数の位相 arg &psi; です(凡例の色相環を参照)。実関数 (&#x211d;) では &psi; の符号 + と &minus; の 2 色になります。</li>
+<li>色が流れるのは、位相が e<sup>&minus;iEt/&hbar;</sup> で時間とともに回転するためで、確率密度そのものは変化しません。この流れの向きは位相速度で、エネルギーの基準の取り方に依存します。ここでは電離極限をエネルギー 0 としているため、m &gt; 0 の複素関数では電子の確率の流れと逆向きに見えます。原作のヘルプにある「色の動く向き = 電子の運動の向き」は、厳密にはこの意味で注意が必要です。</li>
+</ul>
+<p class="end"></p>`;
 
 const source = 'https://github.com/bjthinks/android-orbital-explorer';
 const webSource = 'https://github.com/korintje/electron_orbitals_web';

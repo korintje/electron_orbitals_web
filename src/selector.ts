@@ -2,6 +2,7 @@
 import { MAX_N, type Orbital } from './math';
 import { icon } from './icons';
 import { strings } from './i18n';
+import { EDU } from './edu';
 
 const COLOR_DARK = '#000';
 const COLOR_DIM = '#808080';
@@ -25,11 +26,18 @@ class ValueChanger {
   readonly up = button('arrow', icon('arrowUp'));
   readonly down = button('arrow', icon('arrowDown'));
   private readonly value = document.createElement('div');
+  private readonly label = document.createElement('div');
 
   constructor() {
     this.root.className = 'value-changer';
     this.value.className = 'value';
-    this.root.append(this.up, this.value, this.down);
+    this.label.className = 'qn-label';
+    this.root.append(this.label, this.up, this.value, this.down);
+  }
+
+  /** Web addition: name of the quantum number above the control */
+  setLabel(symbol: string, name: string): void {
+    this.label.innerHTML = `<i>${symbol}</i><small>${name}</small>`;
   }
 
   setText(t: string): void {
@@ -65,6 +73,10 @@ export class OrbitalSelector {
   private readonly rcChanger = button('rc', COMPLEX_NUMBERS);
   private readonly colorChanger = button('icon', '');
   private readonly pauseChanger = button('icon', '');
+  private readonly rcCaption = document.createElement('div');
+  private readonly colorCaption = document.createElement('div');
+  private readonly pauseCaption = document.createElement('div');
+  private lang: 'en' | 'ja' = 'en';
 
   constructor(private readonly onOrbitalChanged: (o: Orbital, pauseTime: number) => void) {
     this.root.id = 'orbital-selector';
@@ -73,7 +85,18 @@ export class OrbitalSelector {
     controls.className = 'controls';
     const column = document.createElement('div');
     column.className = 'button-column';
-    column.append(this.rcChanger, this.colorChanger, this.pauseChanger);
+    // Web addition: each mode button has a caption stating the current mode
+    const columnLabel = document.createElement('div');
+    columnLabel.className = 'qn-label';
+    column.append(columnLabel);
+    for (const [b, c] of [[this.rcChanger, this.rcCaption], [this.colorChanger, this.colorCaption],
+      [this.pauseChanger, this.pauseCaption]] as const) {
+      const row = document.createElement('div');
+      row.className = 'mode-row';
+      c.className = 'mode-caption';
+      row.append(b, c);
+      column.append(row);
+    }
     controls.append(this.nChanger.root, this.lChanger.root, this.mChanger.root, column);
     const spacer = (w: number) => {
       const s = document.createElement('div');
@@ -99,6 +122,10 @@ export class OrbitalSelector {
   }
 
   setLanguage(lang: 'en' | 'ja'): void {
+    this.lang = lang;
+    const T = EDU[lang];
+    [this.nChanger, this.lChanger, this.mChanger].forEach((c, i) => c.setLabel(T.qn[i][0], T.qn[i][1]));
+    this.updateCaptions();
     const s = strings(lang);
     for (const c of [this.nChanger, this.lChanger, this.mChanger]) {
       c.up.setAttribute('aria-label', s.up);
@@ -158,10 +185,23 @@ export class OrbitalSelector {
     else this.mChanger.setText(String(qM));
     this.rcChanger.textContent = real ? REAL_NUMBERS : COMPLEX_NUMBERS;
     this.colorChanger.innerHTML = color ? icon('palette') : icon('bnw');
-    this.pauseChanger.innerHTML = this.pauseTime === 0 ? icon('play') : icon('pause');
+    // Web change: show the conventional pause icon while running
+    this.pauseChanger.innerHTML = this.pauseTime === 0 ? icon('pause') : icon('play');
     this.setButtonTint();
     this.setOrbitalName();
+    this.updateCaptions();
     this.onOrbitalChanged({ n: qN, l: qL, m: qM, real, color }, this.pauseTime);
+  }
+
+  private updateCaptions(): void {
+    const T = EDU[this.lang];
+    this.rcCaption.innerHTML = this.real
+      ? `${T.real}<small>${T.realSub}</small>`
+      : `${T.complex}<small>${T.complexSub}</small>`;
+    this.colorCaption.textContent = this.color ? T.colorMode : T.monoMode;
+    this.pauseCaption.innerHTML = (this.pauseTime === 0 ? T.running : T.paused) +
+      (this.color ? '' : `<small>${T.timeMonoNote}</small>`);
+    this.pauseCaption.classList.toggle('dim', !this.color);
   }
 
   private setButtonTint(): void {
@@ -179,7 +219,13 @@ export class OrbitalSelector {
   }
 
   private setOrbitalName(): void {
-    const { qN, qL, qM, real } = this;
+    this.orbitalName.innerHTML = `<span>${orbitalNameHtml(this)}</span>`;
+  }
+}
+
+export function orbitalNameHtml(o: { qN: number; qL: number; qM: number; real: boolean }): string {
+  {
+    const { qN, qL, qM, real } = o;
     let name = String(qN);
     let subscript: string;
     if (real) {
@@ -232,6 +278,6 @@ export class OrbitalSelector {
       default:
         name += 'fghiklmno'[qL - 3] ?? String(qL);
     }
-    this.orbitalName.innerHTML = `<span>${name}<sub>${subscript}</sub></span>`;
+    return `${name}<sub>${subscript}</sub>`;
   }
 }

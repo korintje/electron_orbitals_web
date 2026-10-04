@@ -7,11 +7,13 @@ export interface Settings {
   showAxes: boolean;
   colorBlind: number; // 0 normal, 1 protanopia, 2 deuteranopia, 3 tritanopia
   language: Language;
+  showLegend: boolean; // web addition
 }
 
 const KEY = 'electron-orbitals-settings';
 
-const DEFAULTS: Settings = { ultraQuality: false, showAxes: true, colorBlind: 0, language: 'auto' };
+const DEFAULTS: Settings = { ultraQuality: false, showAxes: true, colorBlind: 0, language: 'auto',
+  showLegend: true };
 
 export function loadSettings(): Settings {
   try {

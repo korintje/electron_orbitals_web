@@ -4,10 +4,12 @@ import { Camera } from './camera';
 import { aboutHtml, helpHtml } from './docs';
 import { resolveLanguage, strings } from './i18n';
 import { icon } from './icons';
+import { EDU, infoHtml } from './edu';
 import { InputHandler } from './input';
+import { Legend } from './legend';
 import { orbitalEquals, type Orbital } from './math';
 import { loadQuadrature, OrbitalRenderer } from './renderer';
-import { OrbitalSelector } from './selector';
+import { OrbitalSelector, orbitalNameHtml } from './selector';
 import { loadSettings, saveSettings, type Language } from './settings';
 
 const BASE = import.meta.env.BASE_URL;
@@ -30,10 +32,13 @@ const title = document.createElement('h1');
 const fullscreenButton = document.createElement('button');
 fullscreenButton.className = 'toolbar-button';
 fullscreenButton.innerHTML = icon('fullscreen');
+const infoButton = document.createElement('button');
+infoButton.className = 'toolbar-button';
+infoButton.innerHTML = icon('info');
 const menuButton = document.createElement('button');
 menuButton.className = 'toolbar-button';
 menuButton.innerHTML = icon('moreVert');
-toolbar.append(title, fullscreenButton, menuButton);
+toolbar.append(title, infoButton, fullscreenButton, menuButton);
 
 const camera = new Camera();
 let renderer: OrbitalRenderer | null = null;
@@ -46,9 +51,12 @@ let current: Current | null = null;
 let wanted: Orbital | null = null;
 let pauseTime = 0;
 
+const legend = new Legend();
+
 const selector = new OrbitalSelector((o, p) => {
   pauseTime = p;
   wanted = o;
+  updateEdu(o);
   if (current && orbitalEquals(current.orbital, o)) {
     requestRender();
     return;
@@ -63,7 +71,7 @@ const selector = new OrbitalSelector((o, p) => {
     (e) => console.error(e),
   );
 });
-tools.append(toolbar, selector.root);
+tools.append(toolbar, legend.root, selector.root);
 app.append(canvas, tools);
 
 // ---------------------------------------------------------------------------
@@ -87,9 +95,9 @@ function drawFrame(): void {
   if (!renderer || !current || renderer.isContextLost) return;
   if (camera.continueFling()) requestRender();
   const transform = camera.computeShaderTransform(renderer.aspectRatio);
-  renderer.draw(
-    current.orbital, current.data, transform, pauseTime > 0 ? pauseTime : Date.now(), lineWidth(),
-  );
+  const millis = pauseTime > 0 ? pauseTime : Date.now();
+  renderer.draw(current.orbital, current.data, transform, millis, lineWidth());
+  legend.tick(millis);
   if (current.orbital.color && pauseTime === 0) requestRender();
 }
 
@@ -184,6 +192,7 @@ function closeMenu(): void {
 function buildMenu(): void {
   menu.innerHTML = '';
   const items: [string, () => void][] = [
+    [EDU[lang].menuInfo, () => toggleInfo(true)],
     [S.menuAbout, () => openAux(S.menuAbout, aboutHtml(lang), 'doc')],
     [S.menuSettings, () => openSettings()],
     [S.menuHelp, () => openAux(S.menuHelp, helpHtml(lang), 'doc')],
@@ -344,9 +353,16 @@ function openSettings(): void {
     settings.showAxes = v;
     settingsChanged(false);
   });
+  switchPref(EDU[lang].prefLegend_Title, EDU[lang].prefLegend_Summary, () => settings.showLegend,
+    (v) => {
+      settings.showLegend = v;
+      saveSettings(settings);
+      if (wanted) updateEdu(wanted);
+    });
   listPref(S.prefColorBlind_Title, S.colorBlindOptions, () => settings.colorBlind, (i) => {
     settings.colorBlind = i;
     settingsChanged(false);
+    if (wanted) updateEdu(wanted);
   });
   const langs: Language[] = ['auto', 'en', 'ja'];
   listPref(S.prefLanguage_Title, langs.map((l) => S.languageOptions[l]),
@@ -357,6 +373,42 @@ function openSettings(): void {
       openSettings(); // rebuild in the new language
     });
   openAux(S.menuSettings, list, 'settings');
+}
+
+// ---------------------------------------------------------------------------
+// Web addition: "About this orbital" panel and legend
+
+const infoPanel = document.createElement('aside');
+infoPanel.className = 'info-panel hidden';
+const infoHeader = document.createElement('header');
+infoHeader.className = 'info-header';
+const infoTitle = document.createElement('h2');
+const infoClose = document.createElement('button');
+infoClose.className = 'toolbar-button';
+infoClose.innerHTML = icon('close');
+infoHeader.append(infoTitle, infoClose);
+const infoBody = document.createElement('div');
+infoBody.className = 'info-body';
+infoPanel.append(infoHeader, infoBody);
+app.append(infoPanel);
+
+function toggleInfo(open = infoPanel.classList.contains('hidden')): void {
+  infoPanel.classList.toggle('hidden', !open);
+  app.classList.toggle('info-open', open);
+  if (open && wanted) updateEdu(wanted);
+}
+
+infoButton.addEventListener('click', () => toggleInfo());
+infoClose.addEventListener('click', () => toggleInfo(false));
+
+function updateEdu(o: Orbital): void {
+  legend.root.classList.toggle('hidden', !settings.showLegend);
+  legend.update(o, settings.colorBlind, lang);
+  legend.tick(pauseTime > 0 ? pauseTime : Date.now());
+  if (!infoPanel.classList.contains('hidden')) {
+    infoTitle.textContent = EDU[lang].menuInfo;
+    infoBody.innerHTML = infoHtml(o, orbitalNameHtml({ qN: o.n, qL: o.l, qM: o.m, real: o.real }), lang);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -373,7 +425,11 @@ function applyLanguage(): void {
   menuButton.title = S.moreOptions;
   auxBack.setAttribute('aria-label', S.back);
   selector.setLanguage(lang);
+  infoButton.setAttribute('aria-label', EDU[lang].menuInfo);
+  infoButton.title = EDU[lang].menuInfo;
+  infoClose.setAttribute('aria-label', S.back);
   buildMenu();
+  if (wanted) updateEdu(wanted);
 }
 
 // ---------------------------------------------------------------------------
