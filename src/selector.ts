@@ -86,19 +86,22 @@ export class OrbitalSelector {
   gain = 0;
   /** Web addition: same brightness scale for all orbitals instead of per orbital */
   commonScale = false;
-  /** Web addition: show arrows of the probability current density */
-  showCurrent = false;
   private readonly sectionRows = document.createElement('div');
   private readonly scaleLabel = document.createElement('span');
-  private readonly currentLabel = document.createElement('span');
   private readonly scaleButtons: HTMLButtonElement[] = [];
-  private readonly currentButtons: HTMLButtonElement[] = [];
-  private currentRow!: HTMLElement;
   private readonly sectionChanger = button('icon', '');
   private readonly sectionCaption = document.createElement('div');
   readonly sectionPanel = document.createElement('div');
   readonly controls = document.createElement('div');
   private bottomSpacer!: HTMLElement;
+  // Web addition: on phones the options panel is folded into this bar and, when opened,
+  // takes the place of the n/l/m controls instead of covering the orbital
+  private readonly panelBar = document.createElement('button');
+  private readonly panelBarTitle = document.createElement('span');
+  private readonly panelBarSummary = document.createElement('span');
+  private readonly panelBarChevron = document.createElement('span');
+  private panelOpen = false;
+  private planeText = '';
   private readonly resetButtons: HTMLButtonElement[] = [];
   private readonly planeLabel = document.createElement('div');
   private readonly offsetLabel = document.createElement('span');
@@ -137,6 +140,17 @@ export class OrbitalSelector {
       return s;
     };
     this.buildSectionPanel();
+    this.panelBar.type = 'button';
+    this.panelBar.className = 'panel-bar';
+    this.panelBarTitle.className = 'panel-bar-title';
+    this.panelBarSummary.className = 'panel-bar-summary';
+    this.panelBarChevron.className = 'panel-bar-chevron';
+    this.panelBar.append(this.panelBarTitle, this.panelBarSummary, this.panelBarChevron);
+    this.panelBarTitle.innerHTML = icon('tune');
+    this.panelBar.addEventListener('click', () => {
+      this.panelOpen = !this.panelOpen;
+      this.updateCaptions();
+    });
     this.bottomSpacer = spacer(0.1);
     this.root.append(spacer(0.1), this.orbitalName, spacer(0.8), this.sectionPanel, controls,
       this.bottomSpacer);
@@ -289,15 +303,12 @@ export class OrbitalSelector {
       row(this.offsetLabel, this.offsetSlider, this.offsetValue, -1, 1, 0.005,
         () => this.sectionOffset, (v) => (this.sectionOffset = v)),
     );
-    this.currentRow = segmented(this.currentLabel, this.currentButtons, () => this.showCurrent,
-      (v) => (this.showCurrent = v));
     this.sectionPanel.append(
       this.sectionRows,
       row(this.gainLabel, this.gainSlider, this.gainValue, -2, 2, 0.05,
         () => this.gain, (v) => (this.gain = v)),
       segmented(this.scaleLabel, this.scaleButtons, () => this.commonScale,
         (v) => (this.commonScale = v)),
-      this.currentRow,
     );
   }
 
@@ -308,6 +319,7 @@ export class OrbitalSelector {
   placePanels(target: HTMLElement | null): void {
     if (target) target.append(this.controls, this.sectionPanel);
     else {
+      this.root.insertBefore(this.panelBar, this.bottomSpacer);
       this.root.insertBefore(this.sectionPanel, this.bottomSpacer);
       this.root.insertBefore(this.controls, this.bottomSpacer);
     }
@@ -316,6 +328,10 @@ export class OrbitalSelector {
   /** Called by the app with the plane description, which depends on the camera. */
   setPlaneLabel(text: string): void {
     if (this.planeLabel.textContent !== text) this.planeLabel.textContent = text;
+    if (this.planeText !== text) {
+      this.planeText = text;
+      this.updateSummary();
+    }
   }
 
   setMaximumRadius(rmax: number): void {
@@ -323,24 +339,33 @@ export class OrbitalSelector {
     this.updateCaptions();
   }
 
+  private updateSummary(): void {
+    const T = EDU[this.lang];
+    const g = Math.pow(10, this.gain);
+    const gain = `×${g < 1 ? g.toFixed(2) : g < 10 ? g.toFixed(1) : Math.round(g)}`;
+    const parts = this.section && this.planeText ? [this.planeText, gain]
+      : [`${T.sectionGain} ${gain}`, T.scaleOptions[this.commonScale ? 1 : 0]];
+    this.panelBarSummary.textContent = parts.join(' · ');
+  }
+
   private updateCaptions(): void {
     const T = EDU[this.lang];
+    this.root.classList.toggle('panel-open', this.panelOpen);
+    this.panelBar.setAttribute('aria-expanded', String(this.panelOpen));
+    this.panelBar.title = T.panelTitle;
+    this.panelBarChevron.textContent = this.panelOpen ? '▾' : '▸';
+    this.panelBarTitle.innerHTML = `${icon('tune')}<span>${T.panelTitle}</span>`;
+    this.updateSummary();
     this.sectionChanger.innerHTML = this.section ? icon('cut') : icon('layers');
     this.sectionCaption.innerHTML = this.section
       ? `${T.section}<small>${T.sectionSub}</small>`
       : `${T.projection}<small>${T.projectionSub}</small>`;
     this.sectionRows.classList.toggle('hidden', !this.section);
     this.scaleLabel.textContent = T.scaleLabel;
-    this.currentLabel.textContent = T.currentLabel;
     T.scaleOptions.forEach((t, i) => {
       this.scaleButtons[i].textContent = t;
       this.scaleButtons[i].classList.toggle('active', this.commonScale === (i === 1));
     });
-    T.currentOptions.forEach((t, i) => {
-      this.currentButtons[i].textContent = t;
-      this.currentButtons[i].classList.toggle('active', this.showCurrent === (i === 1));
-    });
-    this.currentRow.title = T.currentTitle;
     this.offsetLabel.textContent = T.sectionOffset;
     this.gainLabel.textContent = T.sectionGain;
     this.offsetValue.textContent = `${(this.sectionOffset * this.rmax).toFixed(1)} a₀`;

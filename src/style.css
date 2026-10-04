@@ -1014,29 +1014,69 @@ button {
   }
 }
 
-/* Probability current arrows (2D overlay above the WebGL view) */
-#current-overlay {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
+/* Options panel on phones: folded into a bar; when open it replaces the n/l/m controls */
+.panel-bar {
+  align-self: center;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: min(380px, calc(100% - 24px));
+  min-height: 34px;
+  margin-bottom: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid #333;
+  font-size: 12px;
+  text-align: left;
+  pointer-events: auto;
 }
 
-#app.wide #current-overlay {
-  left: 360px;
-  width: calc(100% - 360px);
+.panel-bar-title {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  color: #fff;
 }
 
-#app.wide.fullscreen #current-overlay {
-  left: 0;
-  width: 100%;
+.panel-bar-title svg {
+  width: 18px;
+  height: 18px;
 }
 
-.legend-current {
-  margin-top: 6px;
+.panel-bar-summary {
+  flex: 1;
+  min-width: 0;
+  color: #bbb;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.legend-current .arrow-sample {
-  font-weight: bold;
+.panel-bar-chevron {
+  flex: none;
+  color: #ccc;
+}
+
+#app:not(.wide) #orbital-selector:not(.panel-open) .section-panel {
+  display: none;
+}
+
+#app:not(.wide) #orbital-selector.panel-open .controls {
+  display: none;
+}
+
+/* Same height as the controls it replaces, so the orbital area does not change */
+#app:not(.wide) #orbital-selector.panel-open .section-panel {
+  min-height: 184px;
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.8);
+}
+
+#app.wide .panel-bar {
+  display: none;
 }

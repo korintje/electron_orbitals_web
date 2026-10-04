@@ -5,7 +5,6 @@ import { aboutHtml, helpHtml } from './docs';
 import { resolveLanguage, strings } from './i18n';
 import { icon } from './icons';
 import { EDU, infoHtml } from './edu';
-import { CurrentOverlay } from './current';
 import { InputHandler } from './input';
 import { Legend } from './legend';
 import {
@@ -110,8 +109,7 @@ sidebarTitle.className = 'sidebar-title';
 sidebar.append(sidebarTitle);
 
 tools.append(toolbar, legend.root, viewButtons, selector.root);
-const currentOverlay = new CurrentOverlay();
-app.append(canvas, currentOverlay.canvas, tools, sidebar);
+app.append(canvas, tools, sidebar);
 
 // ---------------------------------------------------------------------------
 // Rendering (GLSurfaceView with RENDERMODE_WHEN_DIRTY / CONTINUOUSLY)
@@ -139,7 +137,6 @@ function drawFrame(): void {
   if (section) selector.setPlaneLabel(planeLabel(section));
   const view = viewParams(current.orbital);
   renderer.draw(current.orbital, current.data, transform, millis, lineWidth(), section, view);
-  currentOverlay.update(selector.showCurrent, current.orbital, transform, section);
   legend.tick(millis);
   if (current.orbital.color && pauseTime === 0) requestRender();
 }
@@ -536,7 +533,7 @@ infoClose.addEventListener('click', () => toggleInfo(false));
 function updateEdu(o: Orbital): void {
   legend.root.classList.toggle('hidden', !settings.showLegend);
   legend.update(o, settings.colorBlind, lang, selector.section,
-    selector.section ? sectionK(o) : projectionB(o), selector.commonScale, selector.showCurrent);
+    selector.section ? sectionK(o) : projectionB(o), selector.commonScale);
   legend.tick(pauseTime > 0 ? pauseTime : Date.now());
   if (!infoPanel.classList.contains('hidden')) {
     infoTitle.textContent = EDU[lang].menuInfo;
