@@ -1102,3 +1102,37 @@ button {
     display: none;
   }
 }
+
+/* Axes show/hide toggle (next to the view buttons) */
+.view-button.axes-toggle {
+  color: #ccc;
+  margin-left: 4px;
+  display: grid;
+  place-items: center;
+}
+
+.view-button.axes-toggle svg {
+  width: 22px;
+  height: 22px;
+}
+
+.view-button.axes-toggle.off {
+  color: #555;
+}
+
+.view-button.axes-toggle.off svg {
+  opacity: 0.3;
+}
+
+.view-button.axes-toggle.off::after {
+  content: '';
+  position: absolute;
+  width: 70%;
+  height: 2px;
+  background: #ccc;
+  transform: rotate(-45deg);
+}
+
+.view-button {
+  position: relative;
+}

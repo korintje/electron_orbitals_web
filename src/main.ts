@@ -101,6 +101,29 @@ const axisButtons = (['x', 'y', 'z'] as const).map((name, axis) => {
   return b;
 });
 
+// Web addition: show/hide the axes (same setting as "Show axes" in Settings)
+const axesToggle = document.createElement('button');
+axesToggle.type = 'button';
+axesToggle.className = 'view-button axes-toggle';
+axesToggle.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">
+  <path d="M8 16 L21 16" stroke="#ff5a5a" stroke-width="2"/>
+  <path d="M8 16 L8 3" stroke="#7a7aff" stroke-width="2"/>
+  <path d="M8 16 L2.5 21.5" stroke="#5aff5a" stroke-width="2"/></svg>`;
+axesToggle.addEventListener('click', () => {
+  settings.showAxes = !settings.showAxes;
+  settingsChanged(false);
+  updateAxesToggle();
+});
+viewButtons.append(axesToggle);
+
+function updateAxesToggle(): void {
+  axesToggle.classList.toggle('off', !settings.showAxes);
+  axesToggle.setAttribute('aria-pressed', String(settings.showAxes));
+  const t = settings.showAxes ? EDU[lang].axesHide : EDU[lang].axesShow;
+  axesToggle.title = t;
+  axesToggle.setAttribute('aria-label', t);
+}
+
 // Web addition: sidebar used on wide screens (PC); see applyLayout()
 const sidebar = document.createElement('aside');
 sidebar.className = 'sidebar hidden';
@@ -481,6 +504,7 @@ function openSettings(): void {
   switchPref(S.prefAxes_Title, S.prefAxes_Summary, () => settings.showAxes, (v) => {
     settings.showAxes = v;
     settingsChanged(false);
+    updateAxesToggle();
   });
   switchPref(EDU[lang].prefLegend_Title, EDU[lang].prefLegend_Summary, () => settings.showLegend,
     (v) => {
@@ -562,6 +586,7 @@ function applyLanguage(): void {
   sidebarTitle.textContent = S.appName;
   viewLabel.textContent = EDU[lang].viewpoint;
   axisButtons.forEach((b, i) => (b.title = EDU[lang].viewFrom('xyz'[i])));
+  updateAxesToggle();
   if (wanted) updateEdu(wanted);
 }
 
