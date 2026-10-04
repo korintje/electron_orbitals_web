@@ -61,7 +61,8 @@ export class Legend {
     this.header.textContent = `${EDU[this.lang].legend} ${this.collapsed ? '▸' : '▾'}`;
   }
 
-  update(o: Orbital, colorBlind: number, lang: 'en' | 'ja'): void {
+  /** @param sectionK  brightness constant k of the section view, or null for projection */
+  update(o: Orbital, colorBlind: number, lang: 'en' | 'ja', sectionK: number | null = null): void {
     const T = EDU[lang];
     const changedColor = colorBlind !== this.colorBlind;
     this.lang = lang;
@@ -72,18 +73,23 @@ export class Legend {
     this.phase.classList.toggle('hidden', !o.color);
     if (changedColor) this.drawWheel();
     if (changedColor || this.bar.width === 0) this.drawBar();
-    this.phaseText.innerHTML = `${T.legendPhase}<br><small>${o.real ? '' : T.legendPhaseNote}</small>`;
+    const note = sectionK !== null ? T.legendSectionNote : o.real ? '' : T.legendPhaseNote;
+    this.phaseText.innerHTML = `${T.legendPhase}<br><small>${note}</small>`;
     this.markers.classList.toggle('hidden', !o.real);
     if (o.real) {
       this.markers.innerHTML = '<span class="marker plus">+</span><span class="marker minus">−</span>';
-      this.phaseText.innerHTML = `${T.legendPhase}<br><small>ℝ: ${T.legendSign} +/−</small>`;
+      this.phaseText.innerHTML = `${T.legendPhase}<br><small>ℝ: ${T.legendSign} +/−` +
+        (sectionK !== null ? `<br>${T.legendSectionNote}` : '') + '</small>';
     }
 
-    this.densityText.textContent = T.legendDensity;
+    const section = sectionK !== null;
+    this.densityText.innerHTML = section ? T.legendSectionDensity : T.legendDensity;
     const parts = ['<span style="left:0">0</span>'];
-    for (const i of TICKS)
-      parts.push(`<span style="left:${i * 100}%">${sci(columnDensityAt(o, i))}</span>`);
-    parts.push(`<span class="unit">${T.legendUnit}</span>`);
+    for (const i of TICKS) {
+      const value = section ? -Math.log(1 - i) / sectionK : columnDensityAt(o, i);
+      parts.push(`<span style="left:${i * 100}%">${sci(value)}</span>`);
+    }
+    parts.push(`<span class="unit">${section ? T.legendSectionUnit : T.legendUnit}</span>`);
     this.ticks.innerHTML = parts.join('');
 
     const axis = 0.75 * maximumRadius(o.n, o.l);

@@ -713,3 +713,52 @@ button {
     display: none;
   }
 }
+
+.nowrap {
+  white-space: nowrap;
+}
+
+/* Cross-section controls */
+.section-panel {
+  align-self: center;
+  width: min(360px, calc(100% - 24px));
+  margin-bottom: 6px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.55);
+  font-size: 12px;
+  pointer-events: auto;
+}
+
+.plane-label {
+  text-align: center;
+  margin-bottom: 2px;
+  color: #ddd;
+}
+
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+}
+
+.slider-label {
+  width: 5.5em;
+  flex: none;
+  color: #ccc;
+}
+
+.slider-value {
+  width: 4.5em;
+  flex: none;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.slider-row input[type='range'] {
+  flex: 1;
+  min-width: 0;
+  accent-color: #80cbc4;
+  touch-action: pan-x;
+}

@@ -13,6 +13,7 @@ import originVert from './shaders/origin.vert?raw';
 import originFrag from './shaders/origin.frag?raw';
 import arrowVert from './shaders/arrow.vert?raw';
 import arrowFrag from './shaders/arrow.frag?raw';
+import sectionFrag from './shaders/section.frag?raw';
 
 import { invertM } from './camera';
 import {
@@ -22,6 +23,16 @@ import {
 import type { Settings } from './settings';
 
 type GL = WebGL2RenderingContext;
+
+/** Web addition: parameters of the cross-section view */
+export interface SectionParams {
+  /** Unit normal of the plane, pointing away from the camera (orbital coordinates) */
+  normal: [number, number, number];
+  /** Signed distance of the plane from the nucleus along the normal (a₀) */
+  offset: number;
+  /** k / C² for the displayed intensity 1 − exp(−k|ψ|²) (see section.frag) */
+  densityScale: number;
+}
 
 class Program {
   readonly id: WebGLProgram;
@@ -222,6 +233,27 @@ class OrbitalData {
     u.iRadialSteps = radialTextureSize;
   }
 
+  /** Web addition: uniforms of the cross-section shader */
+  setupForSection(p: Program): void {
+    const gl = this.gl;
+    gl.activeTexture(gl.TEXTURE0);
+    this.radialTexture.bind();
+    p.set1i('radial', 0);
+    gl.activeTexture(gl.TEXTURE1);
+    this.azimuthalTexture.bind();
+    p.set1i('azimuthal', 1);
+    const u = this.u;
+    p.set1i('bReal', u.bReal ? 1 : 0);
+    p.set1f('fInverseAzimuthalStepSize', u.fInverseAzimuthalStepSize);
+    p.set1f('fInverseRadialStepSize', u.fInverseRadialStepSize);
+    p.set1f('fM', u.fM);
+    p.set1f('fRadialScaleFactor', u.fRadialScaleFactor);
+    p.set1f('fRadialExponent', u.fRadialExponent);
+    p.set1f('fFactorPower', u.fFactorPower);
+    p.set1i('iAzimuthalSteps', u.iAzimuthalSteps);
+    p.set1i('iRadialSteps', u.iRadialSteps);
+  }
+
   setupForIntegration(p: Program): void {
     const gl = this.gl;
     gl.activeTexture(gl.TEXTURE0);
@@ -262,6 +294,14 @@ export class OrbitalRenderer {
   // Integrator
   private readonly programIntColor: Program;
   private readonly programIntMono: Program;
+
+  // Web addition: cross-section view, evaluated at full resolution
+  private readonly programSectionColor: Program;
+  private readonly programSectionMono: Program;
+  private readonly sectionColor: Texture;
+  private readonly sectionMono: Texture;
+  private readonly fbSectionColor: WebGLFramebuffer;
+  private readonly fbSectionMono: WebGLFramebuffer;
   private readonly outColor: Texture;
   private readonly outMono: Texture;
   private readonly fbColor: WebGLFramebuffer;
@@ -319,6 +359,15 @@ export class OrbitalRenderer {
     this.fbMono = this.makeFramebuffer(this.outMono);
     this.programIntColor = new Program(gl, integratorColorVert, integratorColorFrag);
     this.programIntMono = new Program(gl, integratorMonoVert, integratorMonoFrag);
+
+    this.sectionColor = new Texture(gl, gl.RGBA_INTEGER, gl.SHORT, gl.RGBA16I);
+    this.fbSectionColor = this.makeFramebuffer(this.sectionColor);
+    this.sectionMono = new Texture(gl, gl.RED_INTEGER, gl.SHORT, gl.R16I);
+    this.fbSectionMono = this.makeFramebuffer(this.sectionMono);
+    const header = '#version 300 es\n';
+    this.programSectionColor = new Program(gl, integratorColorVert,
+      header + '#define COLOR\n' + sectionFrag);
+    this.programSectionMono = new Program(gl, integratorColorVert, header + sectionFrag);
 
     // ScreenDrawer
     this.programScreenColor = new Program(gl, screenColorVert, screenColorFrag);
@@ -431,6 +480,8 @@ export class OrbitalRenderer {
     this.integrationHeight = Math.max(1, Math.floor(height / scaleDownFactor));
     this.outColor.resize(this.integrationWidth, this.integrationHeight);
     this.outMono.resize(this.integrationWidth, this.integrationHeight);
+    this.sectionColor.resize(width, height);
+    this.sectionMono.resize(width, height);
     this.outputResized = true;
   }
 
@@ -445,11 +496,18 @@ export class OrbitalRenderer {
   /** Equivalent of onDrawFrame. */
   draw(
     orbital: Orbital, quadratureData: Float32Array, transform: Float32Array<ArrayBuffer>, millis: number,
-    lineWidth: number,
+    lineWidth: number, section: SectionParams | null = null,
   ): void {
     this.data.load(orbital, quadratureData);
-    this.integrate(invertM(transform));
-    this.drawScreen(millis);
+    if (section) {
+      this.drawSection(invertM(transform), section);
+      const tex = orbital.color ? this.sectionColor : this.sectionMono;
+      this.drawScreen(millis, tex, this.width, this.height);
+    } else {
+      this.integrate(invertM(transform));
+      const tex = orbital.color ? this.outColor : this.outMono;
+      this.drawScreen(millis, tex, this.integrationWidth, this.integrationHeight);
+    }
     if (this.settings.showAxes) this.drawAxes(transform, lineWidth);
   }
 
@@ -482,7 +540,26 @@ export class OrbitalRenderer {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
 
-  private drawScreen(millis: number): void {
+  private drawSection(inverseTransform: Float32Array, section: SectionParams): void {
+    const gl = this.gl;
+    const color = this.data.orbital!.color;
+    const p = color ? this.programSectionColor : this.programSectionMono;
+    p.use();
+    gl.disable(gl.BLEND);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, color ? this.fbSectionColor : this.fbSectionMono);
+    gl.viewport(0, 0, this.width, this.height);
+    this.data.setupForSection(p);
+    gl.uniformMatrix4fv(p.loc('inverseTransform'), false, inverseTransform);
+    gl.uniform3fv(p.loc('planeNormal'), section.normal);
+    p.set1f('planeOffset', section.offset);
+    p.set1f('fDensityScale', section.densityScale);
+    gl.bindVertexArray(this.vaoRect);
+    gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+    gl.bindVertexArray(null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  }
+
+  private drawScreen(millis: number, texture: Texture, texW: number, texH: number): void {
     const gl = this.gl;
     const o = this.data.orbital!;
     const p = o.color ? this.programScreenColor : this.programScreenMono;
@@ -490,10 +567,10 @@ export class OrbitalRenderer {
     gl.disable(gl.BLEND);
     gl.viewport(0, 0, this.width, this.height);
     gl.activeTexture(gl.TEXTURE0);
-    (o.color ? this.outColor : this.outMono).bind();
+    texture.bind();
     p.set1i('data', 0);
-    gl.uniform2f(p.loc('texSize'), this.integrationWidth, this.integrationHeight);
-    gl.uniform2i(p.loc('upperClamp'), this.integrationWidth - 1, this.integrationHeight - 1);
+    gl.uniform2f(p.loc('texSize'), texW, texH);
+    gl.uniform2i(p.loc('upperClamp'), texW - 1, texH - 1);
     const period = o.n * o.n * 1000; // ms
     const t = (2 * Math.PI * (millis % period)) / period;
     gl.uniformMatrix2fv(p.loc('colorRotation'), false,

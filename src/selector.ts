@@ -78,7 +78,27 @@ export class OrbitalSelector {
   private readonly pauseCaption = document.createElement('div');
   private lang: 'en' | 'ja' = 'en';
 
-  constructor(private readonly onOrbitalChanged: (o: Orbital, pauseTime: number) => void) {
+  // Web addition: cross-section view
+  section = false;
+  /** Plane position as a fraction of R_max, in [−1, 1] */
+  sectionOffset = 0;
+  /** log10 of the brightness gain of the section view, relative to the default */
+  sectionGain = 0;
+  private readonly sectionChanger = button('icon', '');
+  private readonly sectionCaption = document.createElement('div');
+  private readonly sectionPanel = document.createElement('div');
+  private readonly planeLabel = document.createElement('div');
+  private readonly offsetLabel = document.createElement('span');
+  private readonly offsetValue = document.createElement('span');
+  private readonly gainLabel = document.createElement('span');
+  private readonly gainValue = document.createElement('span');
+  private readonly offsetSlider = document.createElement('input');
+  private readonly gainSlider = document.createElement('input');
+  private rmax = 1;
+
+  constructor(
+    private readonly onOrbitalChanged: (o: Orbital, pauseTime: number) => void,
+  ) {
     this.root.id = 'orbital-selector';
     this.orbitalName.className = 'orbital-name';
     const controls = document.createElement('div');
@@ -90,7 +110,7 @@ export class OrbitalSelector {
     columnLabel.className = 'qn-label';
     column.append(columnLabel);
     for (const [b, c] of [[this.rcChanger, this.rcCaption], [this.colorChanger, this.colorCaption],
-      [this.pauseChanger, this.pauseCaption]] as const) {
+      [this.pauseChanger, this.pauseCaption], [this.sectionChanger, this.sectionCaption]] as const) {
       const row = document.createElement('div');
       row.className = 'mode-row';
       c.className = 'mode-caption';
@@ -103,7 +123,9 @@ export class OrbitalSelector {
       s.style.flex = `${w} 1 0`;
       return s;
     };
-    this.root.append(spacer(0.1), this.orbitalName, spacer(0.8), controls, spacer(0.1));
+    this.buildSectionPanel();
+    this.root.append(spacer(0.1), this.orbitalName, spacer(0.8), this.sectionPanel, controls,
+      spacer(0.1));
 
     const on = (b: HTMLElement, f: () => void) =>
       b.addEventListener('click', () => {
@@ -118,6 +140,7 @@ export class OrbitalSelector {
     on(this.mChanger.down, () => this.decreaseM());
     on(this.rcChanger, () => (this.real = !this.real));
     on(this.colorChanger, () => (this.color = !this.color));
+    on(this.sectionChanger, () => (this.section = !this.section));
     on(this.pauseChanger, () => (this.pauseTime = this.pauseTime !== 0 ? 0 : Date.now()));
   }
 
@@ -134,6 +157,7 @@ export class OrbitalSelector {
     this.rcChanger.setAttribute('aria-label', s.realComplex);
     this.colorChanger.setAttribute('aria-label', s.colormono);
     this.pauseChanger.setAttribute('aria-label', s.pause);
+    this.sectionChanger.setAttribute('aria-label', `${EDU[lang].projection} / ${EDU[lang].section}`);
   }
 
   private increaseN(): void {
@@ -193,8 +217,64 @@ export class OrbitalSelector {
     this.onOrbitalChanged({ n: qN, l: qL, m: qM, real, color }, this.pauseTime);
   }
 
+  private buildSectionPanel(): void {
+    this.sectionPanel.className = 'section-panel hidden';
+    this.planeLabel.className = 'plane-label';
+    const row = (label: HTMLElement, slider: HTMLInputElement, value: HTMLElement,
+      min: number, max: number, step: number, get: () => number, set: (v: number) => void) => {
+      const r = document.createElement('label');
+      r.className = 'slider-row';
+      slider.type = 'range';
+      slider.min = String(min);
+      slider.max = String(max);
+      slider.step = String(step);
+      slider.value = String(get());
+      slider.addEventListener('input', () => {
+        set(Number(slider.value));
+        this.orbitalChanged();
+      });
+      // Double click / double tap resets the slider
+      slider.addEventListener('dblclick', () => {
+        set(0);
+        slider.value = String(get());
+        this.orbitalChanged();
+      });
+      label.className = 'slider-label';
+      value.className = 'slider-value';
+      r.append(label, slider, value);
+      return r;
+    };
+    this.sectionPanel.append(
+      this.planeLabel,
+      row(this.offsetLabel, this.offsetSlider, this.offsetValue, -1, 1, 0.005,
+        () => this.sectionOffset, (v) => (this.sectionOffset = v)),
+      row(this.gainLabel, this.gainSlider, this.gainValue, -2, 2, 0.05,
+        () => this.sectionGain, (v) => (this.sectionGain = v)),
+    );
+  }
+
+  /** Called by the app with the plane description, which depends on the camera. */
+  setPlaneLabel(text: string): void {
+    if (this.planeLabel.textContent !== text) this.planeLabel.textContent = text;
+  }
+
+  setMaximumRadius(rmax: number): void {
+    this.rmax = rmax;
+    this.updateCaptions();
+  }
+
   private updateCaptions(): void {
     const T = EDU[this.lang];
+    this.sectionChanger.innerHTML = this.section ? icon('cut') : icon('layers');
+    this.sectionCaption.innerHTML = this.section
+      ? `${T.section}<small>${T.sectionSub}</small>`
+      : `${T.projection}<small>${T.projectionSub}</small>`;
+    this.sectionPanel.classList.toggle('hidden', !this.section);
+    this.offsetLabel.textContent = T.sectionOffset;
+    this.gainLabel.textContent = T.sectionGain;
+    this.offsetValue.textContent = `${(this.sectionOffset * this.rmax).toFixed(1)} a₀`;
+    const g = Math.pow(10, this.sectionGain);
+    this.gainValue.textContent = `×${g < 1 ? g.toFixed(2) : g < 10 ? g.toFixed(1) : Math.round(g)}`;
     this.rcCaption.innerHTML = this.real
       ? `${T.real}<small>${T.realSub}</small>`
       : `${T.complex}<small>${T.complexSub}</small>`;

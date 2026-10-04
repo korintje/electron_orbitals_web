@@ -71,6 +71,10 @@ by "only" a factor of about a billion.)</p>
 <i>m</i> (magnetic). Tap &#x24d8; for details of the orbital shown: energy, angular momentum, nodes and size.</li>
 <li>Each pixel adds up the orbital along its line of sight, so the image is a projection
 (like an X-ray image), not a cross-section.</li>
+<li>The scissors button switches to the cross-section view, which shows &psi; on a plane
+parallel to the screen. Brightness is |&psi;|&sup2; on the plane and colour is the phase,
+so nodes (&psi; = 0) appear as dark lines. Double tap to align the plane with the xy, yz or
+zx plane. The sliders move the plane and change the brightness; double click a slider to reset it.</li>
 <li>Brightness is the probability density |&psi;|&sup2; summed along the line of sight,
 compressed so that it never saturates. It is scaled separately for each orbital.
 The palette button switches between this brightness with the phase as colour, and the
@@ -135,6 +139,7 @@ ${wiki('化学', '化学', 'ja')}でよく扱われます。</p>
 <ul>
 <li>3 つの数字は量子数 <i>n</i>(主量子数)、<i>l</i>(方位量子数)、<i>m</i>(磁気量子数)です。&#x24d8; ボタンで、表示中の軌道のエネルギー・角運動量・節・大きさを確認できます。</li>
 <li>各画素は視線方向に積算した値を表す投影像(X 線写真のようなもの)で、断面図ではありません。</li>
+<li>はさみのボタンで断面表示に切り替わり、画面に平行な平面上の &psi; を表示します。明るさは平面上の |&psi;|&sup2;、色は位相で、節 (&psi; = 0) が暗い線として見えます。ダブルタップで xy・yz・zx 平面に揃います。スライダーで平面の位置と明るさを変えられます(ダブルクリックで元に戻ります)。</li>
 <li>明るさは確率密度 |&psi;|&sup2; を視線方向に積算したもので、飽和しないように圧縮しています。軌道ごとに明るさの基準が異なります。パレットボタンで、色付き(位相＋確率密度)と白黒(確率密度のみ)を切り替えます。</li>
 <li>色は波動関数の位相 arg &psi; です(凡例の色相環を参照)。実関数 (&#x211d;) では &psi; の符号 + と &minus; の 2 色になります。</li>
 <li>色が流れるのは、位相が e<sup>&minus;iEt/&hbar;</sup> で時間とともに回転するためで、確率密度そのものは変化しません。この流れの向きは位相速度で、エネルギーの基準の取り方に依存します。ここでは電離極限をエネルギー 0 としているため、m &gt; 0 の複素関数では電子の確率の流れと逆向きに見えます。原作のヘルプにある「色の動く向き = 電子の運動の向き」は、厳密にはこの意味で注意が必要です。</li>

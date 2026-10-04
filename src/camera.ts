@@ -244,6 +244,12 @@ export class Camera {
     if (best >= 0) this.totalRotation = ALIGNED_ROTATIONS[best];
   }
 
+  /** Unit viewing direction (camera → origin) in orbital coordinates */
+  viewDirection(): [number, number, number] {
+    const m = this.totalRotation.asRotationMatrix();
+    return [m[2], m[6], m[10]];
+  }
+
   computeShaderTransform(aspectRatio: number): Mat4 {
     const ratio = Math.sqrt(aspectRatio);
     const near = this.cameraDistance * 0.1;

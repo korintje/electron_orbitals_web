@@ -7,8 +7,10 @@ import { icon } from './icons';
 import { EDU, infoHtml } from './edu';
 import { InputHandler } from './input';
 import { Legend } from './legend';
-import { orbitalEquals, type Orbital } from './math';
-import { loadQuadrature, OrbitalRenderer } from './renderer';
+import {
+  maximumDensity, maximumRadius, orbitalEquals, RadialFunction, type Orbital,
+} from './math';
+import { loadQuadrature, OrbitalRenderer, type SectionParams } from './renderer';
 import { OrbitalSelector, orbitalNameHtml } from './selector';
 import { loadSettings, saveSettings, type Language } from './settings';
 
@@ -56,6 +58,7 @@ const legend = new Legend();
 const selector = new OrbitalSelector((o, p) => {
   pauseTime = p;
   wanted = o;
+  selector.setMaximumRadius(maximumRadius(o.n, o.l));
   updateEdu(o);
   if (current && orbitalEquals(current.orbital, o)) {
     requestRender();
@@ -96,9 +99,56 @@ function drawFrame(): void {
   if (camera.continueFling()) requestRender();
   const transform = camera.computeShaderTransform(renderer.aspectRatio);
   const millis = pauseTime > 0 ? pauseTime : Date.now();
-  renderer.draw(current.orbital, current.data, transform, millis, lineWidth());
+  const section = sectionParams(current.orbital);
+  if (section) selector.setPlaneLabel(planeLabel(section));
+  renderer.draw(current.orbital, current.data, transform, millis, lineWidth(), section);
   legend.tick(millis);
   if (current.orbital.color && pauseTime === 0) requestRender();
+}
+
+// ---------------------------------------------------------------------------
+// Web addition: cross-section view
+
+const maxDensityCache = new Map<string, number>();
+
+/** Brightness constant k of the section view: intensity = 1 − exp(−k|ψ|²) */
+function sectionK(o: Orbital): number {
+  const key = `${o.n},${o.l},${o.m},${o.real}`;
+  let rho = maxDensityCache.get(key);
+  if (rho === undefined) {
+    rho = maximumDensity(o);
+    maxDensityCache.set(key, rho);
+  }
+  // Default: the densest point reaches 1 − e⁻¹⁰
+  return Math.pow(10, selector.sectionGain + 1) / rho;
+}
+
+function sectionParams(o: Orbital): SectionParams | null {
+  if (!selector.section) return null;
+  const c = new RadialFunction(1, o.n, o.l).constantFactors;
+  const normal = camera.viewDirection();
+  // Sign chosen so that the slider value equals the coordinate along the dominant axis
+  // (e.g. x = d for the yz plane), whichever side the camera is on.
+  const k = [0, 1, 2].reduce((a, i) => (Math.abs(normal[i]) > Math.abs(normal[a]) ? i : a), 0);
+  return {
+    normal,
+    offset: selector.sectionOffset * maximumRadius(o.n, o.l) * Math.sign(normal[k]),
+    densityScale: sectionK(o) * c * c,
+  };
+}
+
+function signed(x: number): string {
+  return (Math.abs(x) < 0.05 ? 0 : x).toFixed(1).replace('-', '−');
+}
+
+function planeLabel(p: SectionParams): string {
+  const T = EDU[lang];
+  const names = ['yz', 'zx', 'xy'];
+  const coords = ['x', 'y', 'z'];
+  for (let i = 0; i < 3; ++i)
+    if (Math.abs(p.normal[i]) > 0.9999)
+      return T.planeAxis(names[i], `${coords[i]} = ${signed(p.offset * Math.sign(p.normal[i]))} a₀`);
+  return T.planeScreen(signed(selector.sectionOffset * maximumRadius(wanted!.n, wanted!.l)));
 }
 
 let pixelWidth = 1;
@@ -403,7 +453,7 @@ infoClose.addEventListener('click', () => toggleInfo(false));
 
 function updateEdu(o: Orbital): void {
   legend.root.classList.toggle('hidden', !settings.showLegend);
-  legend.update(o, settings.colorBlind, lang);
+  legend.update(o, settings.colorBlind, lang, selector.section ? sectionK(o) : null);
   legend.tick(pauseTime > 0 ? pauseTime : Date.now());
   if (!infoPanel.classList.contains('hidden')) {
     infoTitle.textContent = EDU[lang].menuInfo;

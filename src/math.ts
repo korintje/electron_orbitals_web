@@ -121,6 +121,7 @@ function generalizedLaguerrePolynomial(n: number, a: number): Polynomial {
  * Radial part R_{Z,N,L}(r) = C exp(-Zr/N) (2Zr/N)^L L_{N-L-1}^{2L+1}(2Zr/N).
  */
 export class RadialFunction {
+  readonly constantFactors: number;
   readonly radialScaleFactor: number;
   readonly exponentialConstant: number;
   readonly powerOfR: number;
@@ -128,6 +129,8 @@ export class RadialFunction {
   readonly maximumRadius: number;
 
   constructor(z: number, n: number, l: number) {
+    this.constantFactors =
+      Math.pow((2 * z) / n, 1.5) * Math.sqrt(factorial(n - l - 1) / (2 * n * factorial(n + l)));
     this.radialScaleFactor = (2 * z) / n;
     this.exponentialConstant = -this.radialScaleFactor / 2;
     this.powerOfR = l;
@@ -135,6 +138,11 @@ export class RadialFunction {
       this.radialScaleFactor,
     );
     this.maximumRadius = maximumRadius(n, l);
+  }
+
+  eval(r: number): number {
+    return this.constantFactors * this.oscillatingPart.eval(r) *
+      fastpow(r * this.radialScaleFactor, this.powerOfR) * Math.exp(this.exponentialConstant * r);
   }
 }
 
@@ -180,4 +188,17 @@ export function quadratureOrder(o: Orbital): number {
 
 export function quadratureSteps(o: Orbital): number {
   return o.color ? 64 : 1024;
+}
+
+/** Maximum of |ψ|² over all space (a₀⁻³), used to normalise the section view. */
+export function maximumDensity(o: Orbital): number {
+  const radial = new RadialFunction(1, o.n, o.l);
+  const azimuthal = new AzimuthalFunction(o.l, o.m);
+  let maxR = 0;
+  const rmax = radial.maximumRadius;
+  for (let i = 0; i <= 4000; ++i) maxR = Math.max(maxR, radial.eval((rmax * i) / 4000) ** 2);
+  let maxT = 0;
+  for (let i = 0; i <= 1000; ++i) maxT = Math.max(maxT, azimuthal.eval((Math.PI * i) / 1000) ** 2);
+  // |Φ|² ≤ 1/(2π), or 2/(2π) for real orbitals with m ≠ 0
+  return (maxR * maxT * (o.real && o.m !== 0 ? 2 : 1)) / (2 * Math.PI);
 }
