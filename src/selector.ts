@@ -61,7 +61,7 @@ export class OrbitalSelector {
   qN = 4;
   qL = 2;
   qM = 1;
-  real = false;
+  real = true; // web change: real orbitals by default (original: complex)
   color = true;
   pauseTime = 0;
 
@@ -86,7 +86,10 @@ export class OrbitalSelector {
   sectionGain = 0;
   private readonly sectionChanger = button('icon', '');
   private readonly sectionCaption = document.createElement('div');
-  private readonly sectionPanel = document.createElement('div');
+  readonly sectionPanel = document.createElement('div');
+  readonly controls = document.createElement('div');
+  private bottomSpacer!: HTMLElement;
+  private readonly resetButtons: HTMLButtonElement[] = [];
   private readonly planeLabel = document.createElement('div');
   private readonly offsetLabel = document.createElement('span');
   private readonly offsetValue = document.createElement('span');
@@ -101,7 +104,7 @@ export class OrbitalSelector {
   ) {
     this.root.id = 'orbital-selector';
     this.orbitalName.className = 'orbital-name';
-    const controls = document.createElement('div');
+    const controls = this.controls;
     controls.className = 'controls';
     const column = document.createElement('div');
     column.className = 'button-column';
@@ -124,8 +127,9 @@ export class OrbitalSelector {
       return s;
     };
     this.buildSectionPanel();
+    this.bottomSpacer = spacer(0.1);
     this.root.append(spacer(0.1), this.orbitalName, spacer(0.8), this.sectionPanel, controls,
-      spacer(0.1));
+      this.bottomSpacer);
 
     const on = (b: HTMLElement, f: () => void) =>
       b.addEventListener('click', () => {
@@ -222,7 +226,7 @@ export class OrbitalSelector {
     this.planeLabel.className = 'plane-label';
     const row = (label: HTMLElement, slider: HTMLInputElement, value: HTMLElement,
       min: number, max: number, step: number, get: () => number, set: (v: number) => void) => {
-      const r = document.createElement('label');
+      const r = document.createElement('div');
       r.className = 'slider-row';
       slider.type = 'range';
       slider.min = String(min);
@@ -233,15 +237,19 @@ export class OrbitalSelector {
         set(Number(slider.value));
         this.orbitalChanged();
       });
-      // Double click / double tap resets the slider
-      slider.addEventListener('dblclick', () => {
+      const reset = () => {
         set(0);
         slider.value = String(get());
         this.orbitalChanged();
-      });
+      };
+      // Double click resets the slider, as does the reset button
+      slider.addEventListener('dblclick', reset);
+      const resetButton = button('reset', icon('reset'));
+      resetButton.addEventListener('click', reset);
+      this.resetButtons.push(resetButton);
       label.className = 'slider-label';
       value.className = 'slider-value';
-      r.append(label, slider, value);
+      r.append(label, slider, value, resetButton);
       return r;
     };
     this.sectionPanel.append(
@@ -251,6 +259,18 @@ export class OrbitalSelector {
       row(this.gainLabel, this.gainSlider, this.gainValue, -2, 2, 0.05,
         () => this.sectionGain, (v) => (this.sectionGain = v)),
     );
+  }
+
+  /**
+   * Web addition: put the controls and the section panel into `target` (wide-screen sidebar),
+   * or back into their original place below the orbital when `target` is null.
+   */
+  placePanels(target: HTMLElement | null): void {
+    if (target) target.append(this.controls, this.sectionPanel);
+    else {
+      this.root.insertBefore(this.sectionPanel, this.bottomSpacer);
+      this.root.insertBefore(this.controls, this.bottomSpacer);
+    }
   }
 
   /** Called by the app with the plane description, which depends on the camera. */
@@ -274,6 +294,14 @@ export class OrbitalSelector {
     this.gainLabel.textContent = T.sectionGain;
     this.offsetValue.textContent = `${(this.sectionOffset * this.rmax).toFixed(1)} a₀`;
     const g = Math.pow(10, this.sectionGain);
+    const T2 = EDU[this.lang];
+    [this.sectionOffset, this.sectionGain].forEach((v, i) => {
+      const b = this.resetButtons[i];
+      if (!b) return;
+      b.disabled = v === 0;
+      b.title = T2.resetDefault;
+      b.setAttribute('aria-label', T2.resetDefault);
+    });
     this.gainValue.textContent = `×${g < 1 ? g.toFixed(2) : g < 10 ? g.toFixed(1) : Math.round(g)}`;
     this.rcCaption.innerHTML = this.real
       ? `${T.real}<small>${T.realSub}</small>`

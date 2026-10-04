@@ -762,3 +762,186 @@ button {
   accent-color: #80cbc4;
   touch-action: pan-x;
 }
+
+/* Slider reset buttons */
+.eo-button.reset {
+  width: 30px;
+  height: 30px;
+  flex: none;
+}
+
+.eo-button.reset::before {
+  inset: 2px;
+}
+
+.eo-button.reset svg {
+  width: 18px;
+  height: 18px;
+}
+
+.eo-button.reset:disabled {
+  color: #555;
+  cursor: default;
+}
+
+.slider-value {
+  width: 3.8em;
+}
+
+/* View-from-axis buttons */
+.view-buttons {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 60px);
+  right: calc(env(safe-area-inset-right, 0px) + 8px);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.55);
+  pointer-events: auto;
+}
+
+.view-label {
+  font-size: 11px;
+  color: #ccc;
+  margin-right: 2px;
+}
+
+.view-button {
+  width: 34px;
+  height: 34px;
+  border-radius: 5px;
+  border: 2px solid currentColor;
+  background: rgba(68, 68, 68, 0.53);
+  font-family: 'Times New Roman', 'Noto Serif', serif;
+  font-style: italic;
+  font-size: 19px;
+  line-height: 1;
+}
+
+.view-button:active {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.view-button.axis-x { color: #ff5a5a; }
+.view-button.axis-y { color: #5aff5a; }
+.view-button.axis-z { color: #7a7aff; }
+
+/* ---- Wide screens (PC): sidebar on the left ---- */
+.sidebar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 360px;
+  overflow-y: auto;
+  padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 24px
+    calc(env(safe-area-inset-left, 0px) + 16px);
+  background: #0c0c0c;
+  border-right: 1px solid #222;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  z-index: 5;
+}
+
+.sidebar-title {
+  margin: 4px 0 0;
+  font-size: 22px;
+  font-weight: 500;
+}
+
+#app.wide #orbital-view,
+#app.wide #orbital-tools {
+  left: 360px;
+  width: calc(100% - 360px);
+}
+
+#app.wide .toolbar h1 {
+  visibility: hidden;
+}
+
+#app.wide .orbital-name {
+  font-size: 32px;
+}
+
+#app.wide .sidebar .controls {
+  justify-content: flex-start;
+}
+
+#app.wide .sidebar .section-panel {
+  width: 100%;
+  margin: 0;
+  background: #161616;
+}
+
+#app.wide .sidebar .view-buttons {
+  position: static;
+  align-self: flex-start;
+  background: none;
+  padding: 0;
+  gap: 10px;
+}
+
+#app.wide .sidebar .view-label {
+  font-size: 13px;
+  width: 4em;
+}
+
+#app.wide .sidebar .view-button {
+  width: 44px;
+  height: 40px;
+  font-size: 22px;
+}
+
+#app.wide .sidebar .legend {
+  position: static;
+  width: auto;
+  background: #161616;
+  padding: 6px 12px 10px;
+  font-size: 13px;
+}
+
+#app.wide .legend .legend-header {
+  font-size: 13px;
+}
+
+#app.wide .legend .legend-text small {
+  font-size: 12px;
+}
+
+#app.wide .legend .wheel-tick {
+  font-size: 11px;
+}
+
+#app.wide .legend .legend-ticks {
+  font-size: 11px;
+  height: 16px;
+}
+
+#app.wide .legend .legend-ticks sup {
+  font-size: 8px;
+}
+
+#app.wide .legend .legend-wheel {
+  margin: 16px 20px 16px 22px;
+}
+
+#app.wide .legend .legend-markers .marker {
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  line-height: 18px;
+  font-size: 14px;
+}
+
+#app.wide.fullscreen .sidebar {
+  display: none;
+}
+
+#app.wide.fullscreen #orbital-view,
+#app.wide.fullscreen #orbital-tools {
+  left: 0;
+  width: 100%;
+}

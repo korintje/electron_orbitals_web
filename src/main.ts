@@ -74,8 +74,39 @@ const selector = new OrbitalSelector((o, p) => {
     (e) => console.error(e),
   );
 });
-tools.append(toolbar, legend.root, selector.root);
-app.append(canvas, tools);
+// Web addition: buttons to view along the x, y and z axes
+const viewButtons = document.createElement('div');
+viewButtons.className = 'view-buttons';
+const viewLabel = document.createElement('span');
+viewLabel.className = 'view-label';
+viewButtons.append(viewLabel);
+const axisButtons = (['x', 'y', 'z'] as const).map((name, axis) => {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = `view-button axis-${name}`;
+  b.textContent = name;
+  b.addEventListener('click', () => {
+    // First tap: x right/z up for the y view (textbook xz figures), y right/z up for the
+    // x view, x right/y up for the z view. Tapping again shows the opposite side.
+    const first: 1 | -1 = axis === 1 ? -1 : 1;
+    const cur = camera.currentAxisView();
+    const sign: 1 | -1 = cur && cur[0] === axis && cur[1] === first ? (-first as 1 | -1) : first;
+    camera.viewFromAxis(axis as 0 | 1 | 2, sign);
+    requestRender();
+  });
+  viewButtons.append(b);
+  return b;
+});
+
+// Web addition: sidebar used on wide screens (PC); see applyLayout()
+const sidebar = document.createElement('aside');
+sidebar.className = 'sidebar hidden';
+const sidebarTitle = document.createElement('h1');
+sidebarTitle.className = 'sidebar-title';
+sidebar.append(sidebarTitle);
+
+tools.append(toolbar, legend.root, viewButtons, selector.root);
+app.append(canvas, tools, sidebar);
 
 // ---------------------------------------------------------------------------
 // Rendering (GLSurfaceView with RENDERMODE_WHEN_DIRTY / CONTINUOUSLY)
@@ -210,9 +241,33 @@ function showError(): void {
 
 let fullScreenMode = false;
 
+// ---------------------------------------------------------------------------
+// Web addition: separate layouts for wide screens (sidebar) and phones (overlay)
+
+const wideQuery = window.matchMedia('(min-width: 900px) and (min-height: 520px)');
+let wide = false;
+
+function applyLayout(): void {
+  wide = wideQuery.matches;
+  app.classList.toggle('wide', wide);
+  sidebar.classList.toggle('hidden', !wide);
+  if (wide) {
+    selector.placePanels(sidebar);
+    sidebar.append(viewButtons, legend.root);
+  } else {
+    selector.placePanels(null);
+    tools.insertBefore(legend.root, selector.root);
+    tools.insertBefore(viewButtons, selector.root);
+  }
+  legend.setLarge(wide);
+}
+
+wideQuery.addEventListener('change', applyLayout);
+
 function setFullscreen(f: boolean): void {
   fullScreenMode = f;
   tools.classList.toggle('hidden', f);
+  app.classList.toggle('fullscreen', f);
   if (f) {
     document.documentElement.requestFullscreen?.().catch(() => {});
   } else if (document.fullscreenElement) {
@@ -479,12 +534,16 @@ function applyLanguage(): void {
   infoButton.title = EDU[lang].menuInfo;
   infoClose.setAttribute('aria-label', S.back);
   buildMenu();
+  sidebarTitle.textContent = S.appName;
+  viewLabel.textContent = EDU[lang].viewpoint;
+  axisButtons.forEach((b, i) => (b.title = EDU[lang].viewFrom('xyz'[i])));
   if (wanted) updateEdu(wanted);
 }
 
 // ---------------------------------------------------------------------------
 // Start
 
+applyLayout();
 applyLanguage();
 resizeObserver.observe(canvas);
 selector.orbitalChanged();

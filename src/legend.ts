@@ -4,8 +4,6 @@ import { maximumRadius, type Orbital } from './math';
 import { monoColor, phaseColor } from './phasecolor';
 import { BOHR_NM, columnDensityAt, sci, timePhase } from './physics';
 
-const WHEEL = 52; // CSS px
-const BAR_W = 150;
 const BAR_H = 10;
 const WHEEL_INTENSITY = 0.8;
 const TICKS = [0.5, 0.9];
@@ -27,6 +25,8 @@ export class Legend {
   private colorBlind = -1;
   private lang: 'en' | 'ja' = 'en';
   private collapsed = false;
+  private wheelSize = 52; // CSS px
+  private barWidth = 150;
 
   constructor() {
     this.root.className = 'legend';
@@ -96,12 +96,23 @@ export class Legend {
     this.axisText.textContent = T.legendAxis(axis.toFixed(1), (axis * BOHR_NM).toFixed(2));
   }
 
+  /** Web layout: larger legend in the wide-screen sidebar */
+  setLarge(large: boolean): void {
+    const [w, b] = large ? [96, 260] : [52, 150];
+    if (w === this.wheelSize) return;
+    this.wheelSize = w;
+    this.barWidth = b;
+    this.root.classList.toggle('large', large);
+    this.drawWheel();
+    this.drawBar();
+  }
+
   /** Move the ± markers of real orbitals with the time-dependent phase. */
   tick(millis: number): void {
     const o = this.orbital;
     if (!o || !o.color || !o.real) return;
     const a = timePhase(o.n, millis);
-    const r = WHEEL / 2 - 8;
+    const r = this.wheelSize / 2 - 8;
     const [plus, minus] = this.markers.children as unknown as HTMLElement[];
     // Canvas y grows downwards; phase angle grows counter-clockwise
     plus.style.transform = `translate(${r * Math.cos(a)}px, ${-r * Math.sin(a)}px)`;
@@ -110,10 +121,11 @@ export class Legend {
 
   private drawWheel(): void {
     const dpr = window.devicePixelRatio || 1;
-    const size = Math.round(WHEEL * dpr);
+    const size = Math.round(this.wheelSize * dpr);
     const c = this.wheel;
     c.width = c.height = size;
-    c.style.width = c.style.height = `${WHEEL}px`;
+    c.style.width = c.style.height = `${this.wheelSize}px`;
+    this.wheelBox.style.width = this.wheelBox.style.height = `${this.wheelSize}px`;
     const ctx = c.getContext('2d')!;
     const img = ctx.createImageData(size, size);
     const half = size / 2;
@@ -137,9 +149,10 @@ export class Legend {
   private drawBar(): void {
     const dpr = window.devicePixelRatio || 1;
     const c = this.bar;
-    c.width = Math.round(BAR_W * dpr);
+    c.width = Math.round(this.barWidth * dpr);
     c.height = Math.round(BAR_H * dpr);
-    c.style.width = `${BAR_W}px`;
+    c.style.width = `${this.barWidth}px`;
+    this.ticks.style.width = `${this.barWidth}px`;
     c.style.height = `${BAR_H}px`;
     const ctx = c.getContext('2d')!;
     for (let x = 0; x < c.width; ++x) {

@@ -244,6 +244,41 @@ export class Camera {
     if (best >= 0) this.totalRotation = ALIGNED_ROTATIONS[best];
   }
 
+  /**
+   * Web addition: look at the nucleus from the +axis (sign = 1) or −axis (sign = −1) side.
+   * The z-axis points up for x and y views; the y-axis points up for z views.
+   */
+  viewFromAxis(axis: 0 | 1 | 2, sign: 1 | -1): void {
+    const toViewer = [0, 0, 0];
+    toViewer[axis] = sign;
+    const up = axis === 2 ? [0, 1, 0] : [0, 0, 1];
+    // screen right = up × toViewer
+    const right = [
+      up[1] * toViewer[2] - up[2] * toViewer[1],
+      up[2] * toViewer[0] - up[0] * toViewer[2],
+      up[0] * toViewer[1] - up[1] * toViewer[0],
+    ];
+    // In camera world space, screen right is −x, up is +y and toward the viewer is −z
+    // (setLookAtM from (0, 0, −d)). The rotation maps the object vectors onto those.
+    const target = (q: Quaternion) => {
+      const m = q.asRotationMatrix();
+      const apply = (v: number[]) => [0, 1, 2].map((r) => m[r] * v[0] + m[4 + r] * v[1] + m[8 + r] * v[2]);
+      const err = (a: number[], b: number[]) => a.reduce((s, x, i) => s + (x - b[i]) ** 2, 0);
+      return err(apply(right), [-1, 0, 0]) + err(apply(up), [0, 1, 0]) + err(apply(toViewer), [0, 0, -1]);
+    };
+    let best = ALIGNED_ROTATIONS[0];
+    for (const q of ALIGNED_ROTATIONS) if (target(q) < target(best)) best = q;
+    this.stopFling();
+    this.totalRotation = best;
+  }
+
+  /** The axis view currently shown, if any (e.g. [2, 1] for the view from +z) */
+  currentAxisView(): [number, number] | null {
+    const d = this.viewDirection(); // camera → origin
+    for (let i = 0; i < 3; ++i) if (Math.abs(d[i]) > 0.9999) return [i, -Math.sign(d[i])];
+    return null;
+  }
+
   /** Unit viewing direction (camera → origin) in orbital coordinates */
   viewDirection(): [number, number, number] {
     const m = this.totalRotation.asRotationMatrix();
