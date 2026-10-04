@@ -68,30 +68,79 @@ by "only" a factor of about a billion.)</p>
 <h3 id="help-read">How to read the image (added in the web version)</h3>
 <ul>
 <li>The three numbers are the quantum numbers <i>n</i> (principal), <i>l</i> (azimuthal) and
-<i>m</i> (magnetic). Tap &#x24d8; for details of the orbital shown: its wave function, radial graphs, energy, angular momentum, nodes and time scale.</li>
-<li>Each pixel adds up the orbital along its line of sight, so the image is a projection
-(like an X-ray image), not a cross-section.</li>
-<li>The scissors button switches to the cross-section view, which shows &psi; on a plane
-parallel to the screen. Brightness is |&psi;|&sup2; on the plane and colour is the phase,
-so nodes (&psi; = 0) appear as dark lines. Double tap to align the plane with the xy, yz or
-zx plane. The sliders move the plane and change the brightness; double click a slider to reset it.</li>
-<li>Brightness is the probability density |&psi;|&sup2; summed along the line of sight,
-compressed as 1 &minus; e<sup>&minus;bN</sup> (N = &int;|&psi;|&sup2; ds) so that it never saturates.
-By default the brightness scale is "Common": every orbital uses the same b (that of 2p), so
-brightness can be compared between orbitals. "Per orbital" adjusts b for each orbital, which
-makes large orbitals easier to see but prevents comparison.
-The palette button switches between this brightness with the phase as colour, and the
-brightness alone (black and white).</li>
-<li>Colour is the phase arg &psi; of the wave function (see the colour wheel in the legend).
-In the projection it is the average phase along the line of sight, weighted by |&psi;|&sup2;;
-where phases cancel along the line of sight the colour turns pale.
-For real (&#x211d;) orbitals there are only two colours, the sign + and &minus; of &psi;.</li>
-<li>The colours flow because the phase rotates in time as e<sup>&minus;iEt/&hbar;</sup>.
-The probability density itself does not change. The direction of this flow is a
-phase velocity, which depends on where the zero of energy is chosen. With the zero at the
-ionisation limit, as here, the colours of a complex orbital with m &gt; 0 flow opposite to
-the electron's probability current. So the colour flow does not show the direction of the
-electron's motion. The actual probability current is described in the &#x24d8; panel.</li>
+<i>m</i> (magnetic). Tap &#x24d8; for details of the orbital shown: its wave function, radial graphs,
+energy, angular momentum, nodes and time scale.</li>
+<li>The &#x2102; / &#x211d; button switches between complex orbitals (definite m) and real orbitals
+(p<sub>x</sub>, d<sub>xy</sub>, &hellip;). See &ldquo;Complex and real orbitals&rdquo; below.</li>
+<li>The palette button switches between colour (the phase of a complex orbital, or the sign of a
+real orbital) and black and white (density only). The brightness is the same in both.</li>
+<li>The layers / scissors button switches between the projection (each pixel sums the orbital
+along its line of sight, like an X-ray image) and the cross-section (&psi; on a plane parallel to
+the screen; double tap to align with the xy, yz or zx plane). The sliders move the plane and
+change the brightness; double click a slider to reset it.</li>
+<li>What exactly the brightness and colours show is explained in &ldquo;What the display shows&rdquo; below.</li>
+</ul>
+<h3 id="help-values">What the display shows (added in the web version)</h3>
+<div class="table-wrap"><table>
+<tr><th></th><th>Projection</th><th>Cross-section</th></tr>
+<tr><th>Brightness</th><td>N = &int;|&psi;|&sup2; ds [a<sub>0</sub><sup>&minus;2</sup>]<br>probability density summed along the line of sight</td><td>|&psi;|&sup2; [a<sub>0</sub><sup>&minus;3</sup>]<br>probability density on the plane</td></tr>
+<tr><th>Colour, complex orbital</th><td>phase of &int;|&psi;|&psi; ds<br>(|&psi;|&sup2;-weighted average phase)</td><td>phase arg &psi;</td></tr>
+<tr><th>Colour, real orbital</th><td>sign of &int;|&psi;|&psi; ds<br>(the dominant sign)</td><td>sign of &psi; (+/&minus;)</td></tr>
+</table></div>
+<ul>
+<li><b>Brightness</b> is the probability density. It is compressed as 1 &minus; e<sup>&minus;bN</sup> so that it
+never saturates; the legend shows the scale. By default the brightness scale is &ldquo;Per orbital&rdquo;:
+b is adjusted for each orbital so that large orbitals are also easy to see, but brightness cannot be
+compared between orbitals. &ldquo;Common&rdquo; uses the same b (that of 2p) for every orbital, so brightness
+can be compared. Black and white mode shows only this brightness.</li>
+<li><b>Colour of a complex orbital</b> is the phase arg &psi; of the wave function (see the colour wheel in
+the legend). The colour at one point has no meaning by itself: multiplying &psi; by a constant phase
+(as time evolution does) changes every colour but not the state. What is meaningful is how the
+colour changes in space: it winds m times around the z-axis, which corresponds to
+L<sub>z</sub> = m&hbar;, and its gradient gives the probability current
+j = (&hbar;/&mu;)|&psi;|&sup2;&nabla;arg &psi;.</li>
+<li><b>Colour of a real orbital</b> is the sign of &psi;: two colours on opposite sides of the colour wheel,
+marked + and &minus; in the legend. This is the &ldquo;phase of the lobes&rdquo; drawn in two colours in chemistry
+textbooks. The relative sign of the lobes is meaningful (it decides whether the overlap with another
+orbital is bonding or antibonding), but the overall sign is not: &minus;&psi; is the same state.
+This app follows the original in leaving out the Condon&ndash;Shortley phase, and real orbitals with
+m &lt; 0 use sin(m&phi;) = &minus;sin(|m|&phi;), so their sign is opposite to the usual textbook formulas
+(e.g. &minus;p<sub>y</sub>, &minus;d<sub>xy</sub>). The density is not affected.</li>
+<li>In the projection the colour is the average along the line of sight, weighted by |&psi;|&sup2;.
+Where different phases (or + and &minus;) overlap along the line of sight they cancel and the colour turns
+pale; the saturation shows how well the phases agree. In the cross-section there is no averaging, and
+nodes (&psi; = 0) appear as dark lines.</li>
+<li><b>Time evolution</b>: a stationary state evolves as &psi;(t) = &psi; e<sup>&minus;iEt/&hbar;</sup>. Only the overall
+phase rotates, so the colours rotate around the colour wheel (for a real orbital the + and &minus; colours
+rotate together) while the probability density does not change. The direction of this flow is a phase
+velocity, which depends on where the zero of energy is chosen. With the zero at the ionisation limit, as
+here, the colours of a complex orbital with m &gt; 0 flow opposite to the electron's probability current.
+So the colour flow does not show the direction of the electron's motion; the actual probability current
+is described in the &#x24d8; panel.</li>
+</ul>
+<h3 id="help-basis">Complex and real orbitals (added in the web version)</h3>
+<p>The states with the same n and l (for example the three 2p states) all have the same energy, and they
+can be described by two different sets of functions. Both are eigenfunctions of the energy and of
+L&sup2;; they differ in whether L<sub>z</sub> is definite.</p>
+<div class="table-wrap"><table>
+<tr><th></th><th>Complex orbitals (&#x2102;)</th><th>Real orbitals (&#x211d;)</th></tr>
+<tr><th>2p example</th><td>p<sub>+1</sub> &prop; (x + iy), p<sub>0</sub> &prop; z, p<sub>&minus;1</sub> &prop; (x &minus; iy)</td><td>p<sub>x</sub> &prop; x, p<sub>y</sub> &prop; y, p<sub>z</sub> &prop; z</td></tr>
+<tr><th>Definite</th><td>L<sub>z</sub> = m&hbar;</td><td>direction of the lobes</td></tr>
+<tr><th>Probability current</th><td>circulates around the z-axis</td><td>zero (standing wave)</td></tr>
+<tr><th>Density</th><td>symmetric about the z-axis</td><td>lobes along x, y, z, &hellip;</td></tr>
+<tr><th>Colour</th><td>phase; winds m times around z</td><td>sign + / &minus;</td></tr>
+<tr><th>Used in</th><td>atomic physics (magnetic fields, spectroscopy, angular momentum)</td><td>chemistry (bonds, molecular orbitals, crystal fields)</td></tr>
+</table></div>
+<ul>
+<li>A real orbital is a sum or difference of the complex orbitals with +m and &minus;m, for example
+p<sub>x</sub> = (p<sub>+1</sub> + p<sub>&minus;1</sub>)/&radic;2 and
+p<sub>y</sub> = (p<sub>+1</sub> &minus; p<sub>&minus;1</sub>)/(i&radic;2). The imaginary parts cancel, leaving a real
+function. In the &#x211d; mode the m number is shown with &plusmn; (&plusmn;|m| for cos, &#x2213;|m| for sin), because L<sub>z</sub> is not definite.</li>
+<li>Measuring L<sub>z</sub> in a real orbital gives +|m|&hbar; or &minus;|m|&hbar; with equal probability. In return,
+the lobes point in definite directions, which is what is needed to discuss the direction of chemical bonds.</li>
+<li>For m = 0 the two are the same function.</li>
+<li>Because the states are degenerate, every function of either set is an equally valid stationary state
+of the hydrogen atom. Neither is the &ldquo;true shape&rdquo;: they are different states.</li>
 </ul>
 <h3 id="help-radial">Radial graphs (added in the web version)</h3>
 <p>The &#x24d8; panel plots three functions of the distance r from the nucleus. The wave function
@@ -149,10 +198,10 @@ ${wiki('原子軌道', '原子軌道', 'ja')}は普遍的なもので、どの�
 </ul>
 <h3>&#x2102; や &#x211d; とは?</h3>
 <p>このボタンは、表示する軌道の生成系、つまり${wiki('基底_(線型代数学)', '基底', 'ja')}を選びます。
-複素数 (&#x2102;) の軌道はそれぞれ m の値が確定しており、電子の運動がよくわかります。
+複素軌道 (&#x2102;) はそれぞれ m の値が確定しており、電子の運動がよくわかります。
 これらの状態は外部磁場の中の孤立した原子で最も意味を持ち、
 ${wiki('量子力学', '量子力学', 'ja')}や${wiki('シュレーディンガー方程式', 'シュレーディンガー方程式', 'ja')}の解の文脈でよく扱われます。
-実数 (&#x211d;) の軌道は、m の値が逆符号の 2 つの状態を組み合わせたもので、
+実軌道 (&#x211d;) は、m の値が逆符号の 2 つの状態を組み合わせたもので、
 電子の位置はよりよくわかりますが、運動は不確かになります。
 これらの状態は原子どうしが${wiki('化学結合', '結合', 'ja')}するときに最も意味を持ち、
 ${wiki('化学', '化学', 'ja')}でよく扱われます。</p>
@@ -173,11 +222,41 @@ ${wiki('化学', '化学', 'ja')}でよく扱われます。</p>
 <h3 id="help-read">画面の読み方(Web 版で追加)</h3>
 <ul>
 <li>3 つの数字は量子数 <i>n</i>(主量子数)、<i>l</i>(方位量子数)、<i>m</i>(磁気量子数)です。&#x24d8; ボタンで、表示中の軌道の波動関数・動径部分のグラフ・エネルギー・角運動量・節・時間の尺度を確認できます。</li>
-<li>各画素は視線方向に積算した値を表す投影像(X 線写真のようなもの)で、断面図ではありません。</li>
-<li>はさみのボタンで断面表示に切り替わり、画面に平行な平面上の &psi; を表示します。明るさは平面上の |&psi;|&sup2;、色は位相で、節 (&psi; = 0) が暗い線として見えます。ダブルタップで xy・yz・zx 平面に揃います。スライダーで平面の位置と明るさを変えられます(ダブルクリックで元に戻ります)。</li>
-<li>明るさは確率密度 |&psi;|&sup2; を視線方向に積算したもので、飽和しないように 1 &minus; e<sup>&minus;bN</sup>(N = &int;|&psi;|&sup2; ds)で圧縮しています。標準の「明るさの基準」は「全軌道共通」で、全軌道で同じ b(2p 軌道の値)を使うので、軌道どうしの明るさを比較できます。「軌道ごと」にすると b を軌道ごとに調整するので、大きな軌道も見やすくなりますが、軌道間の比較はできません。パレットボタンで、色付き(位相＋確率密度)と白黒(確率密度のみ)を切り替えます。</li>
-<li>色は波動関数の位相 arg &psi; です(凡例の色相環を参照)。投影表示では視線上の |&psi;|&sup2; で重み付けした平均の位相で、視線上で位相が打ち消し合うところは白っぽくなります。実関数 (&#x211d;) では &psi; の符号 + と &minus; の 2 色になります。</li>
-<li>色が流れるのは、位相が e<sup>&minus;iEt/&hbar;</sup> で時間とともに回転するためで、確率密度そのものは変化しません。この流れの向きは位相速度で、エネルギーの基準の取り方に依存します。ここでは電離極限をエネルギー 0 としているため、m &gt; 0 の複素関数では電子の確率の流れと逆向きに見えます。原作のヘルプにある「色の動く向き = 電子の運動の向き」は、厳密にはこの意味で注意が必要です。実際の確率の流れについては &#x24d8; ボタンのパネルを参照してください。</li>
+<li>&#x2102; / &#x211d; ボタンで、複素軌道(m が確定)と実軌道(p<sub>x</sub>, d<sub>xy</sub> など)を切り替えます。下の「複素軌道と実軌道」を参照してください。</li>
+<li>パレットのボタンで、色あり(複素軌道では位相、実軌道では符号)と白黒(確率密度のみ)を切り替えます。明るさはどちらも同じです。</li>
+<li>レイヤー/はさみのボタンで、投影(各画素は視線に沿って足し合わせた値。X 線写真のようなもの)と断面(画面に平行な平面上の &psi;。ダブルタップで xy・yz・zx 平面に揃う)を切り替えます。スライダーで平面の位置と明るさを変えられます(ダブルクリックで元に戻ります)。</li>
+<li>明るさと色が何の値を表すかは、下の「表示している値」を参照してください。</li>
+</ul>
+<h3 id="help-values">表示している値(Web 版で追加)</h3>
+<div class="table-wrap"><table>
+<tr><th></th><th>投影</th><th>断面</th></tr>
+<tr><th>明るさ</th><td>N = &int;|&psi;|&sup2; ds [a<sub>0</sub><sup>&minus;2</sup>]<br>視線に沿って積分した確率密度</td><td>|&psi;|&sup2; [a<sub>0</sub><sup>&minus;3</sup>]<br>平面上の確率密度</td></tr>
+<tr><th>色(複素軌道)</th><td>&int;|&psi;|&psi; ds の位相<br>(|&psi;|&sup2; で重み付けした平均の位相)</td><td>位相 arg &psi;</td></tr>
+<tr><th>色(実軌道)</th><td>&int;|&psi;|&psi; ds の符号<br>(視線上で優勢な符号)</td><td>&psi; の符号 (+/&minus;)</td></tr>
+</table></div>
+<ul>
+<li><b>明るさ</b>は確率密度です。飽和しないように 1 &minus; e<sup>&minus;bN</sup> で圧縮していて、目盛りは凡例に示しています。標準の「明るさの基準」は「軌道ごと」で、b を軌道ごとに調整するので大きな軌道も見やすくなりますが、軌道間で明るさは比較できません。「全軌道共通」にすると、全軌道で同じ b(2p 軌道の値)を使うので、軌道どうしの明るさを比較できます。白黒表示はこの明るさだけを表示します。</li>
+<li><b>複素軌道の色</b>は波動関数の位相 arg &psi; です(凡例の色相環を参照)。1 点の色そのものには意味がありません。&psi; 全体に一定の位相を掛けても(時間変化がまさにそれです)すべての色が変わりますが、状態は同じだからです。意味があるのは色の空間的な変化で、z 軸の周りを m 回巻くことが L<sub>z</sub> = m&hbar; に対応し、位相の勾配が確率流 j = (&hbar;/&mu;)|&psi;|&sup2;&nabla;arg &psi; を決めます。</li>
+<li><b>実軌道の色</b>は &psi; の符号で、色相環の反対側にある 2 色です(凡例の + と &minus; の印)。化学の教科書で軌道のローブを 2 色に塗り分けている「ローブの位相」と同じものです。ローブ間の相対的な符号には意味があります(他の軌道との重なりが結合性か反結合性かを決める)が、全体の符号には意味がありません(&minus;&psi; は同じ状態)。このアプリは原作どおり Condon&ndash;Shortley 位相を含まず、m &lt; 0 の実軌道は sin(m&phi;) = &minus;sin(|m|&phi;) を使うので、教科書の式とは符号が逆になります(例: &minus;p<sub>y</sub>、&minus;d<sub>xy</sub>)。確率密度には影響しません。</li>
+<li>投影では、色は視線上の |&psi;|&sup2; で重み付けした平均です。視線上で異なる位相(実軌道では + と &minus;)が重なると打ち消し合って白っぽくなり、彩度は位相の揃い具合を表します。断面では平均を取らないので、節 (&psi; = 0) が暗い線として見えます。</li>
+<li><b>時間変化</b>: 定常状態は &psi;(t) = &psi; e<sup>&minus;iEt/&hbar;</sup> のように変化します。回るのは全体の位相だけなので、色は色相環上を回り(実軌道では + と &minus; の 2 色が一緒に回る)、確率密度は変化しません。この流れの向きは位相速度で、エネルギーの基準の取り方に依存します。ここでは電離極限をエネルギー 0 としているため、m &gt; 0 の複素軌道では電子の確率の流れと逆向きに見えます。原作のヘルプにある「色の動く向き = 電子の運動の向き」は、厳密にはこの意味で注意が必要です。実際の確率の流れについては &#x24d8; ボタンのパネルを参照してください。</li>
+</ul>
+<h3 id="help-basis">複素軌道と実軌道(Web 版で追加)</h3>
+<p>n と l が同じ状態(例えば 3 つの 2p 状態)はエネルギーが等しく、2 通りの関数の組で表せます。どちらもエネルギーと L&sup2; の固有関数で、違いは L<sub>z</sub> が確定しているかどうかです。</p>
+<div class="table-wrap"><table>
+<tr><th></th><th>複素軌道 (&#x2102;)</th><th>実軌道 (&#x211d;)</th></tr>
+<tr><th>2p の例</th><td>p<sub>+1</sub> &prop; (x + iy)、p<sub>0</sub> &prop; z、p<sub>&minus;1</sub> &prop; (x &minus; iy)</td><td>p<sub>x</sub> &prop; x、p<sub>y</sub> &prop; y、p<sub>z</sub> &prop; z</td></tr>
+<tr><th>確定している量</th><td>L<sub>z</sub> = m&hbar;</td><td>ローブの向き</td></tr>
+<tr><th>確率流</th><td>z 軸の周りを回る</td><td>0(定在波)</td></tr>
+<tr><th>確率密度の形</th><td>z 軸の周りで回転対称</td><td>x, y, z などの方向に伸びたローブ</td></tr>
+<tr><th>色</th><td>位相。z 軸の周りを m 回巻く</td><td>符号 + / &minus;</td></tr>
+<tr><th>主に使う場面</th><td>原子物理(磁場、分光、角運動量)</td><td>化学(結合、分子軌道、結晶場)</td></tr>
+</table></div>
+<ul>
+<li>実軌道は、+m と &minus;m の複素軌道の和や差です。例えば p<sub>x</sub> = (p<sub>+1</sub> + p<sub>&minus;1</sub>)/&radic;2、p<sub>y</sub> = (p<sub>+1</sub> &minus; p<sub>&minus;1</sub>)/(i&radic;2) で、虚数部分が打ち消し合って実数の関数になります。&#x211d; では L<sub>z</sub> が確定しないので、m の数字を &plusmn; 付きで表示します(cos 型は &plusmn;|m|、sin 型は &#x2213;|m|)。</li>
+<li>実軌道で L<sub>z</sub> を測定すると、+|m|&hbar; と &minus;|m|&hbar; が等しい確率で得られます。その代わりにローブの向きが決まるので、化学結合の方向性を議論できます。</li>
+<li>m = 0 では両者は同じ関数です。</li>
+<li>縮退しているので、どちらの組のどの関数も、水素原子の同じエネルギーの正当な定常状態です。どちらかが「本当の形」というわけではなく、別の状態を表しています。</li>
 </ul>
 <h3 id="help-radial">動径部分のグラフ(Web 版で追加)</h3>
 <p>&#x24d8; ボタンのパネルでは、核からの距離 r の関数を 3 つ描いています。波動関数は &psi; = R<sub>nl</sub>(r) Y<sub>l</sub><sup>m</sup>(&theta;, &phi;) と分けられ、&int;|Y|&sup2; d&Omega; = 1 です。</p>

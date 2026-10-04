@@ -79,13 +79,15 @@ export class Legend {
     this.phase.classList.toggle('hidden', !o.color);
     if (changedColor) this.drawWheel();
     if (changedColor || this.bar.width === 0) this.drawBar();
-    const note = sectionK !== null ? T.legendSectionNote : o.real ? '' : T.legendPhaseNote;
-    this.phaseText.innerHTML = `${T.legendPhase}<br><small>${note}</small>`;
+    const section0 = sectionK !== null;
     this.markers.classList.toggle('hidden', !o.real);
     if (o.real) {
       this.markers.innerHTML = '<span class="marker plus">+</span><span class="marker minus">−</span>';
-      this.phaseText.innerHTML = `${T.legendPhase}<br><small>ℝ: ${T.legendSign} +/−` +
-        (sectionK !== null ? `<br>${T.legendSectionNote}` : '') + '</small>';
+      this.phaseText.innerHTML = `${T.legendSign}<br><small>` +
+        `${section0 ? T.legendSectionNote : T.legendSignNote}</small>`;
+    } else {
+      this.phaseText.innerHTML =
+        `${T.legendPhase}<br><small>${section0 ? T.legendSectionNote : T.legendPhaseNote}</small>`;
     }
 
     this.densityText.innerHTML = (section ? T.legendSectionDensity : T.legendDensity) +

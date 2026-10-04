@@ -85,7 +85,7 @@ export class OrbitalSelector {
   /** log10 of the brightness gain (both views), relative to the default */
   gain = 0;
   /** Web addition: same brightness scale for all orbitals instead of per orbital */
-  commonScale = true;
+  commonScale = false;
   private readonly sectionRows = document.createElement('div');
   private readonly scaleLabel = document.createElement('span');
   private readonly scaleButtons: HTMLButtonElement[] = [];
@@ -380,9 +380,9 @@ export class OrbitalSelector {
     });
     this.gainValue.textContent = `×${g < 1 ? g.toFixed(2) : g < 10 ? g.toFixed(1) : Math.round(g)}`;
     this.rcCaption.innerHTML = this.real
-      ? `${T.real}<small>${T.realSub}</small>`
-      : `${T.complex}<small>${T.complexSub}</small>`;
-    this.colorCaption.textContent = this.color ? T.colorMode : T.monoMode;
+      ? `${T.real}<small>${this.qM === 0 ? T.sameAtM0 : T.realSub}</small>`
+      : `${T.complex}<small>${this.qM === 0 ? T.sameAtM0 : T.complexSub}</small>`;
+    this.colorCaption.textContent = !this.color ? T.monoMode : this.real ? T.signMode : T.colorMode;
     this.pauseCaption.innerHTML = (this.pauseTime === 0 ? T.running : T.paused) +
       (this.color ? '' : `<small>${T.timeMonoNote}</small>`);
     this.pauseCaption.classList.toggle('dim', !this.color);
