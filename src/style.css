@@ -1,0 +1,450 @@
+:root {
+  color-scheme: dark;
+  --dark: #111;
+  font-family: Roboto, system-ui, -apple-system, 'Segoe UI', 'Hiragino Sans', 'Noto Sans JP',
+    sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+  color: #fff;
+  overscroll-behavior: none;
+}
+
+#app {
+  position: fixed;
+  inset: 0;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.hidden {
+  display: none !important;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* ---- Orbital view ---- */
+
+#orbital-view {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
+
+#orbital-tools {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px)
+    env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+}
+
+#orbital-tools.hidden {
+  display: flex !important;
+  visibility: hidden;
+}
+
+/* ---- Toolbar ---- */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  min-height: 56px;
+  padding: 0 4px 0 16px;
+  pointer-events: none;
+}
+
+.toolbar h1 {
+  flex: 1;
+  margin: 0;
+  font-size: 20px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.toolbar-button {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  pointer-events: auto;
+}
+
+.toolbar-button svg {
+  width: 24px;
+  height: 24px;
+}
+
+.toolbar-button:active {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* ---- Orbital selector ---- */
+
+#orbital-selector {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.orbital-name {
+  font-size: 24px;
+  line-height: 1.4;
+  height: calc(2 * 1.4em);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.orbital-name sub {
+  font-size: 0.75em;
+}
+
+.orbital-name sup {
+  font-size: 0.85em;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.value-changer,
+.button-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.value-changer .value {
+  height: 50px;
+  width: 50px;
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  white-space: nowrap;
+}
+
+/* ButtonStyle: 50dp button, translucent rounded fill inset by a 10dp transparent stroke */
+.eo-button {
+  width: 50px;
+  height: 50px;
+  display: grid;
+  place-items: center;
+  position: relative;
+  pointer-events: auto;
+  color: #fff;
+}
+
+.eo-button::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border-radius: 5px;
+  background: rgba(68, 68, 68, 0.533);
+  z-index: -1;
+}
+
+.eo-button {
+  isolation: isolate;
+}
+
+.eo-button:focus-visible::before {
+  background: rgba(136, 136, 136, 0.533);
+}
+
+.eo-button:active::before {
+  background: rgba(255, 255, 255, 0.533);
+}
+
+.eo-button:focus {
+  outline: none;
+}
+
+.eo-button.arrow svg {
+  width: 46px;
+  height: 46px;
+}
+
+.eo-button.icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.eo-button.rc {
+  font-size: 24px;
+}
+
+.icon-bnw {
+  display: block;
+  width: 24px;
+  height: 24px;
+  background: currentColor;
+  -webkit-mask: url('/icons/bnw.png') center / contain no-repeat;
+  mask: url('/icons/bnw.png') center / contain no-repeat;
+}
+
+/* ---- Overflow menu ---- */
+
+.popup-menu {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 8px);
+  right: calc(env(safe-area-inset-right, 0px) + 8px);
+  min-width: 180px;
+  background: var(--dark);
+  border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+  padding: 8px 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+}
+
+.popup-menu button {
+  text-align: left;
+  padding: 14px 20px;
+  font-size: 16px;
+}
+
+.popup-menu button:hover,
+.popup-menu button:focus-visible {
+  background: #333;
+  outline: none;
+}
+
+/* ---- Auxiliary pages (Help, About, Settings) ---- */
+
+.aux {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: #000;
+  z-index: 20;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) 0
+    env(safe-area-inset-left, 0px);
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.aux-toolbar {
+  background: #000;
+  padding-left: 4px;
+  gap: 16px;
+  pointer-events: auto;
+}
+
+.aux-content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 16px env(safe-area-inset-bottom, 0px);
+}
+
+/* assets/docs/style.css */
+.aux-content.doc {
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+  line-height: 1.45;
+}
+
+.doc h2 {
+  text-align: center;
+  margin: 1em 0;
+}
+
+.doc h3 {
+  text-align: center;
+  margin: 1em 0;
+}
+
+.doc h4 {
+  text-align: center;
+  margin: 0;
+  font-weight: normal;
+  overflow-wrap: anywhere;
+}
+
+.doc span.l {
+  font-family: cursive;
+  letter-spacing: 2px;
+}
+
+.doc .end {
+  padding-bottom: 50px;
+}
+
+.doc a {
+  color: #8bf;
+}
+
+.doc ul {
+  list-style-position: inside;
+  padding: 0;
+}
+
+/* Preferences */
+.aux-content.settings {
+  padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) 0;
+  background: var(--dark);
+}
+
+.pref {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  text-align: left;
+  padding: 16px 16px 16px 72px;
+  cursor: pointer;
+  min-height: 72px;
+}
+
+.pref:active {
+  background: #333;
+}
+
+.pref-text {
+  flex: 1;
+}
+
+.pref-title {
+  font-size: 16px;
+}
+
+.pref-summary {
+  font-size: 14px;
+  color: #aaa;
+  margin-top: 2px;
+}
+
+@media (max-width: 480px) {
+  .pref {
+    padding-left: 16px;
+  }
+}
+
+.switch {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 36px;
+  height: 14px;
+  border-radius: 7px;
+  background: #666;
+  position: relative;
+  flex: none;
+  margin: 0 8px;
+  cursor: pointer;
+}
+
+.switch::after {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ececec;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  transition: left 0.15s;
+}
+
+.switch:checked {
+  background: #4f7f7a;
+}
+
+.switch:checked::after {
+  left: 18px;
+  background: #80cbc4;
+}
+
+.dialog-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: grid;
+  place-items: center;
+  z-index: 30;
+  padding: 16px;
+}
+
+.dialog {
+  background: #222;
+  border-radius: 4px;
+  padding: 16px 0 8px;
+  width: min(100%, 360px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+}
+
+.dialog h2 {
+  font-size: 20px;
+  font-weight: 500;
+  margin: 0 24px 12px;
+}
+
+.radio-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 12px 24px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.radio-row input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: #80cbc4;
+}
+
+/* ---- Error screen (activity_error) ---- */
+
+.error-screen {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+}
+
+.error-screen svg {
+  width: 96px;
+  height: 96px;
+}
+
+.error-screen .apology {
+  font-size: 20px;
+}

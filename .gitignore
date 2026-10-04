@@ -1,0 +1,7 @@
+node_modules/
+dist/
+tools/
+electron_orbitals_android/
+analysis/jadx/
+analysis/original_source/
+analysis/jadx.log
