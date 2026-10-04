@@ -85,7 +85,7 @@ export class OrbitalSelector {
   /** log10 of the brightness gain (both views), relative to the default */
   gain = 0;
   /** Web addition: same brightness scale for all orbitals instead of per orbital */
-  commonScale = false;
+  commonScale = true;
   private readonly sectionRows = document.createElement('div');
   private readonly scaleLabel = document.createElement('span');
   private readonly scaleButtons: HTMLButtonElement[] = [];

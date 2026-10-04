@@ -1148,3 +1148,51 @@ button {
   font-size: 0.9em;
   margin-top: 0.4em;
 }
+
+/* Radial plots in the info panel */
+.radial-plot {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 4px 0 8px;
+  font-family: inherit;
+}
+
+.radial-plot .rp-frame {
+  fill: #161616;
+  stroke: #333;
+}
+
+.radial-plot .rp-grid {
+  stroke: #262626;
+}
+
+.radial-plot .rp-zero {
+  stroke: #666;
+}
+
+.radial-plot .rp-node {
+  stroke: #999;
+  stroke-dasharray: 3 3;
+}
+
+.radial-plot .rp-mean {
+  stroke: #fc6;
+  stroke-dasharray: 1 3;
+  stroke-width: 1.5;
+}
+
+.radial-plot .rp-label {
+  font-size: 12px;
+}
+
+.radial-plot .rp-unit,
+.radial-plot .rp-tick {
+  font-size: 10.5px;
+  fill: #aaa;
+}
+
+.radial-plot .rp-note {
+  font-size: 11px;
+  fill: #fc6;
+}

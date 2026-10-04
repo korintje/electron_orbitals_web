@@ -4,6 +4,7 @@ import {
   BOHR_NM, PERIOD_N1_S, coneNodes, energyEV, meanRadius, planeNodes, radialNodes, sci,
 } from './physics';
 import { maximumRadius } from './math';
+import { radialFacts, radialPlotSvg } from './radialplot';
 
 type Lang = 'en' | 'ja';
 
@@ -133,6 +134,18 @@ export function infoHtml(o: Orbital, nameHtml: string, lang: Lang): string {
     psi = `ψ ∝ ${Rnl} ${P} ${trig}`;
   }
 
+  const rf = radialFacts(o);
+  const rmean = meanRadius(o.n, o.l);
+  const nodeList = rf.nodes.map((r) => fmt(r, 3)).join(', ');
+  const rnl = `R<sub>${o.n}${o.l}</sub>`;
+  const svgR = `R<tspan baseline-shift="sub" font-size="8">${o.n}${o.l}</tspan>`;
+  const radialPlot = radialPlotSvg(o, rf, ja
+    ? { r: `${svgR}(r)  動径波動関数`, r2: `${svgR}(r)²`, d: `D(r) = r²${svgR}(r)²  動径分布関数`,
+      rmp: `r<tspan baseline-shift="sub" font-size="7">mp</tspan> = ${fmt(rf.rmp)} a₀`, mean: '平均 ⟨r⟩', node: '動径節' }
+    : { r: `${svgR}(r)  radial wave function`, r2: `${svgR}(r)²`,
+      d: `D(r) = r²${svgR}(r)²  radial distribution`,
+      rmp: `r<tspan baseline-shift="sub" font-size="7">mp</tspan> = ${fmt(rf.rmp)} a₀`, mean: 'mean ⟨r⟩', node: 'radial node' });
+
   const t = ja
     ? {
       qn: '量子数',
@@ -147,6 +160,27 @@ export function infoHtml(o: Orbital, nameHtml: string, lang: Lang): string {
       wfNote: o.real
         ? '実関数(ℝ): 化学結合の議論で使う形。ψ は実数なので、色は符号 (+/−) の 2 色になる。'
         : '複素関数(ℂ): L² と L<sub>z</sub> の同時固有関数。位相 e<sup>imφ</sup> が z 軸の周りで m 回まわる。',
+      rad: '動径部分: 電子は核からどの距離にいるか',
+      radRows: [
+        `<b>${rnl}(r)</b>(動径波動関数): ψ のうち核からの距離 r だけに依存する部分。符号が変わる点が動径節で、この軌道では ${nr} 個` +
+          (nr ? `(r = ${nodeList} a₀)` : '') + '。核の近くでは R ∝ r<sup>l</sup> となり、' +
+          (o.l === 0
+            ? 's 軌道 (l = 0) では核の位置でも 0 にならない。'
+            : `l = ${o.l} では核の位置で 0 になる(角運動量による遠心力の項 l(l+1)/2r² が電子を核から遠ざける)。`),
+        `<b>${rnl}(r)²</b>: ある方向に沿った 1 点あたりの確率密度。|ψ|² = ${rnl}² |Y|² なので、方向を固定すれば |ψ|² は ${rnl}² に比例する。` +
+          (o.l === 0
+            ? '最大は核の位置 (r = 0)。1 点ごとに比べれば、電子が最も見出されやすい点は核そのもの。'
+            : 'r = 0 では 0 で、核から離れたところで最大になる。'),
+        `<b>D(r) = r²${rnl}(r)²</b>(動径分布関数): 核からの距離が r と r + dr の間の薄い球殻(方向は問わない)に電子が見出される確率が D(r) dr で、∫D(r) dr = 1。` +
+          '球殻の体積 4πr² dr は r とともに大きくなるので、1 点あたりの密度 R² が減っていっても、点の数の増加と掛け合わさって核から離れた距離に山ができる。' +
+          `この軌道の D(r) は n − l = ${rf.peaks} 個の山を持ち、最も見出されやすい距離(最確半径)は r<sub>mp</sub> = ${fmt(rf.rmp)} a₀ (${fmt(rf.rmp * BOHR_NM)} nm)、平均は ⟨r⟩ = ${fmt(rmean)} a₀。` +
+          (o.l === o.n - 1 ? `l = n − 1 の軌道では r<sub>mp</sub> = n² a₀ となり、ボーア模型の軌道半径と一致する。` : ''),
+        'なぜその距離か: 電子の分布は、核のクーロン引力(核に近いほどポテンシャルエネルギーが下がる)と運動エネルギー(狭い領域に閉じ込めるほど不確定性原理により大きくなる)の釣り合いで決まるため、核に落ち込まず有限の広がりを持つ。n が大きいほどエネルギーが高く、遠くまで広がる(大きさはおよそ n² に比例)。' +
+          (nr > 0
+            ? '内側の小さな山は、電子が核の近くまで入り込む「貫入」を表す。同じ n でも l が小さいほど貫入が大きく、多電子原子では内側の電子による遮蔽を受けにくいためエネルギーが低くなる(例: 2s < 2p)。'
+            : ''),
+        '横軸は核からの距離 r(a₀ 単位。水素原子 Z = 1 なので Zr/a₀ と同じ)、範囲は表示範囲 R<sub>max</sub> まで。',
+      ],
       energy: 'エネルギー',
       energyRow: `E<sub>${o.n}</sub> = −13.6 eV / ${o.n}² = ${fmt(E)} eV(水素原子では l, m によらず、縮退度 n² = ${o.n * o.n})`,
       am: '角運動量',
@@ -170,7 +204,7 @@ export function infoHtml(o: Orbital, nameHtml: string, lang: Lang): string {
       read: '画面の読み方',
       readRows: [
         '各画素は、その視線に沿って積算した値を表す投影像(X 線写真のようなもの)で、断面図や等値面ではない。',
-        '明るさ: 確率密度 |ψ|² の視線積算 N = ∫|ψ|² ds を 1 − e<sup>−bN</sup> で圧縮したもの。b は標準では軌道ごとに調整されるため、異なる軌道どうしで明るさは比較できない。「明るさの基準」を「全軌道共通」にすると、全軌道で同じ b(2p 軌道の値)を使うので比較できる。モノクロ表示はこの明るさだけを表示する。',
+        '明るさ: 確率密度 |ψ|² の視線積算 N = ∫|ψ|² ds を 1 − e<sup>−bN</sup> で圧縮したもの。標準の「全軌道共通」では全軌道で同じ b(2p 軌道の値)を使うので、異なる軌道どうしで明るさを比較できる。「軌道ごと」にすると b が軌道ごとに調整され、大きな軌道も見やすくなるが、軌道間の比較はできない。モノクロ表示はこの明るさだけを表示する。',
         '色: 位相 arg ψ(視線上で |ψ|² の重み付き平均)。視線上で位相が打ち消し合うところは白っぽくなる。',
         '色の流れる向きは位相速度で、エネルギーの基準(ここでは電離極限 = 0)の取り方に依存する。複素関数 (m > 0) の確率の流れ(+φ 向き)とは逆向きに見える。単一の定常状態では全体の位相は観測できないので、色の流れは電子の運動を表さない(電子の確率の流れは「確率流」の項を参照)。',
         '断面表示(はさみのボタン): 画面に平行な平面上の ψ の値を表示する。明るさは確率密度 |ψ|²、色は位相で、節 (ψ = 0) が暗い線として直接見える。ダブルタップで xy・yz・zx 平面に揃い、スライダーで平面を前後に動かせる。',
@@ -189,6 +223,27 @@ export function infoHtml(o: Orbital, nameHtml: string, lang: Lang): string {
       wfNote: o.real
         ? 'Real (ℝ): the form used for chemical bonding. ψ is real, so the colour shows only its sign (+/−).'
         : 'Complex (ℂ): a simultaneous eigenfunction of L² and L<sub>z</sub>. The phase e<sup>imφ</sup> winds m times around the z-axis.',
+      rad: 'Radial part: how far is the electron from the nucleus?',
+      radRows: [
+        `<b>${rnl}(r)</b> (radial wave function): the part of ψ that depends only on the distance r from the nucleus. It changes sign at the radial nodes; this orbital has ${nr}` +
+          (nr ? ` (r = ${nodeList} a₀)` : '') + '. Near the nucleus R ∝ r<sup>l</sup>, so ' +
+          (o.l === 0
+            ? 'an s orbital (l = 0) does not vanish at the nucleus.'
+            : `with l = ${o.l} it vanishes at the nucleus (the centrifugal term l(l+1)/2r² of the angular momentum keeps the electron away).`),
+        `<b>${rnl}(r)²</b>: the probability density per point along a fixed direction. Since |ψ|² = ${rnl}² |Y|², along any fixed direction |ψ|² is proportional to ${rnl}².` +
+          (o.l === 0
+            ? ' Its maximum is at the nucleus (r = 0): point by point, the most likely place to find the electron is the nucleus itself.'
+            : ' It is zero at r = 0 and peaks away from the nucleus.'),
+        `<b>D(r) = r²${rnl}(r)²</b> (radial distribution function): D(r) dr is the probability of finding the electron in the thin spherical shell between r and r + dr, in any direction; ∫D(r) dr = 1. ` +
+          'The volume of the shell, 4πr² dr, grows with r, so even while the density per point R² decreases, the growing number of points makes D peak away from the nucleus. ' +
+          `Here D(r) has n − l = ${rf.peaks} peak${rf.peaks > 1 ? 's' : ''}; the most probable distance is r<sub>mp</sub> = ${fmt(rf.rmp)} a₀ (${fmt(rf.rmp * BOHR_NM)} nm) and the mean is ⟨r⟩ = ${fmt(rmean)} a₀.` +
+          (o.l === o.n - 1 ? ' For l = n − 1, r<sub>mp</sub> = n² a₀, the orbit radius of the Bohr model.' : ''),
+        'Why this distance: the distribution is a balance between the Coulomb attraction (the potential energy is lower closer to the nucleus) and the kinetic energy (which, by the uncertainty principle, grows as the electron is confined to a smaller region), so the electron does not fall into the nucleus but spreads over a finite size. Larger n means higher energy and a wider spread (the size grows roughly as n²).' +
+          (nr > 0
+            ? ' The small inner peaks show penetration: the electron gets close to the nucleus. For the same n, smaller l penetrates more; in many-electron atoms this reduces shielding by inner electrons and lowers the energy (e.g. 2s < 2p).'
+            : ''),
+        'Horizontal axis: distance r from the nucleus in units of a₀ (Z = 1 for hydrogen, so this equals Zr/a₀), up to the display range R<sub>max</sub>.',
+      ],
       energy: 'Energy',
       energyRow: `E<sub>${o.n}</sub> = −13.6 eV / ${o.n}² = ${fmt(E)} eV (in hydrogen independent of l and m; degeneracy n² = ${o.n * o.n})`,
       am: 'Angular momentum',
@@ -212,7 +267,7 @@ export function infoHtml(o: Orbital, nameHtml: string, lang: Lang): string {
       read: 'How to read the image',
       readRows: [
         'Each pixel shows a value accumulated along its line of sight: a projection, like an X-ray image, not a cross-section or an isosurface.',
-        'Brightness: the column probability density N = ∫|ψ|² ds, compressed as 1 − e<sup>−bN</sup>. By default b is adjusted per orbital, so brightness cannot be compared between orbitals. Setting the brightness scale to "Common" uses the same b (that of 2p) for every orbital, so they can be compared. Mono mode shows only this brightness.',
+        'Brightness: the column probability density N = ∫|ψ|² ds, compressed as 1 − e<sup>−bN</sup>. By default ("Common") the same b (that of 2p) is used for every orbital, so brightness can be compared between orbitals. "Per orbital" adjusts b for each orbital, which makes large orbitals easier to see but prevents comparison. Mono mode shows only this brightness.',
         'Colour: the phase arg ψ (averaged along the line of sight, weighted by |ψ|²). Where phases cancel along the line of sight the colour turns pale.',
         'The direction in which colours flow is a phase velocity, which depends on the choice of zero energy (here the ionisation limit). For complex orbitals with m > 0 it runs opposite to the probability current (+φ). The overall phase of a single stationary state is not observable, so the colour flow does not show the electron\'s motion (see Probability current for the actual flow).',
         'Cross-section view (scissors button): shows ψ on a plane parallel to the screen. Brightness is the probability density |ψ|², colour is the phase, and nodes (ψ = 0) appear directly as dark lines. Double tap to align with the xy, yz or zx plane, and use the slider to move the plane back and forth.',
@@ -224,6 +279,7 @@ export function infoHtml(o: Orbital, nameHtml: string, lang: Lang): string {
 <h2 class="info-name">${nameHtml}<span class="info-basis">${o.real ? 'ℝ' : 'ℂ'}</span></h2>
 <h3>${t.qn}</h3>${li(t.qnRows)}
 <h3>${t.wf}</h3><p class="formula">${psi}</p><p>${t.wfNote}</p>
+<h3>${t.rad}</h3>${radialPlot}${li(t.radRows)}
 <h3>${t.energy}</h3><p>${t.energyRow}</p>
 <h3>${t.am}</h3><p>${t.amRow}</p>
 <h3>${t.cur}</h3><p>${t.curRow}</p>
