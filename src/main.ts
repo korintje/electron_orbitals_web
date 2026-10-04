@@ -554,6 +554,15 @@ function toggleInfo(open = infoPanel.classList.contains('hidden')): void {
 infoButton.addEventListener('click', () => toggleInfo());
 infoClose.addEventListener('click', () => toggleInfo(false));
 
+// Links from the info panel to a section of the help page
+infoBody.addEventListener('click', (e) => {
+  const a = (e.target as Element).closest<HTMLAnchorElement>('a.help-link');
+  if (!a) return;
+  e.preventDefault();
+  openAux(S.menuHelp, helpHtml(lang), 'doc');
+  auxContent.querySelector(`#${a.dataset.help}`)?.scrollIntoView();
+});
+
 function updateEdu(o: Orbital): void {
   legend.root.classList.toggle('hidden', !settings.showLegend);
   legend.update(o, settings.colorBlind, lang, selector.section,

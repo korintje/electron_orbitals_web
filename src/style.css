@@ -1196,3 +1196,7 @@ button {
   font-size: 11px;
   fill: #fc6;
 }
+
+.info-body a.help-link {
+  color: #8bf;
+}

@@ -39,6 +39,8 @@ export interface RadialFacts {
   rmp: number;
   /** Number of maxima of D */
   peaks: number;
+  /** Position of the maximum of R², in a₀ (0 for s orbitals) */
+  rDensityMax: number;
 }
 
 function bisect(f: (r: number) => number, a: number, b: number): number {
@@ -75,14 +77,18 @@ export function radialFacts(o: Orbital): RadialFacts {
   const P = (r: number) => R.oscillatingPart.eval(r);
   const nodes: number[] = [];
   const h = rmax / 4000;
-  let best = 0, bestR = 0, peaks = 0;
+  let best = 0, bestR = 0, peaks = 0, bestDensity = 0, bestDensityR = 0;
   let prev = P(h / 2), dPrev = D(0), dRising = true;
   for (let i = 1; i <= 4000; ++i) {
     const r = i * h;
     const p = P(r);
+    const d = D(r);
     if ((p < 0) !== (prev < 0)) nodes.push(bisect(P, r - h, r));
     prev = p;
-    const d = D(r);
+    if (d / (r * r) > bestDensity) {
+      bestDensity = d / (r * r);
+      bestDensityR = r;
+    }
     if (d > best) {
       best = d;
       bestR = r;
@@ -91,7 +97,13 @@ export function radialFacts(o: Orbital): RadialFacts {
     dRising = d >= dPrev;
     dPrev = d;
   }
-  return { nodes, rmp: refineMax(D, Math.max(0, bestR - h), bestR + h), peaks };
+  const R2 = (r: number) => R.eval(r) ** 2;
+  return {
+    nodes,
+    rmp: refineMax(D, Math.max(0, bestR - h), bestR + h),
+    peaks,
+    rDensityMax: o.l === 0 ? 0 : refineMax(R2, Math.max(0, bestDensityR - h), bestDensityR + h),
+  };
 }
 
 export interface RadialLabels {
