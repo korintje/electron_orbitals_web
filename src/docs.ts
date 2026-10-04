@@ -151,19 +151,23 @@ const webSource = 'https://github.com/korintje/electron_orbitals_web';
 const link = (u: string) => `<a href="${u}" target="_blank" rel="noopener">${u}</a>`;
 
 const about = (ja: boolean) => `
-<h2>Electron Orbitals 1.7c</h2>
+<h2>Electron Orbitals Web</h2>
+<p class="about-lead">${ja
+    ? '水素原子の電子軌道を、位相(複素数)と時間変化を含めて GPU で描画する Web アプリです。PC とスマートフォンのブラウザで動作します。'
+    : 'A web app that renders the electron orbitals of the hydrogen atom on the GPU, including their phase (complex values) and time evolution. It runs in browsers on PCs and smartphones.'}</p>
 <h3>Design &amp; Programming</h3>
-<h4>Brian Johnson</h4>
-<h3>Special Thanks</h3>
-<h4>Marissa Anderson</h4>
-<h4>Paul Berry</h4>
-<h4>Steuard Jensen</h4>
-<h4>Chad Versace</h4>
+<h4>Takuro Hosomi</h4>
 <h3>Source Code</h3>
-<h4>${link(source)}</h4>
-<h3>${ja ? 'Web 版' : 'Web Version'}</h3>
-<h4>${ja ? '移植' : 'Ported by'}: korintje</h4>
 <h4>${link(webSource)}</h4>
+<h3>${ja ? 'オリジナル' : 'Original'}</h3>
+<p class="about-lead">${ja
+    ? 'このアプリは、Android アプリ「Electron Orbitals」(1.7c)を Web に移植し、教育用の機能を加えたものです。'
+    : 'This app is a web port of the Android app "Electron Orbitals" (1.7c), with additional features for education.'}</p>
+<h4>Electron Orbitals — Design &amp; Programming</h4>
+<h4>Brian Johnson</h4>
+<h4 class="about-sub">Special Thanks: Marissa Anderson, Paul Berry, Steuard Jensen, Chad Versace</h4>
+<h4>${link(source)}</h4>
+<h3>${ja ? 'ライセンス' : 'License'}</h3>
 <h4 class="end">GNU General Public License v3.0</h4>`;
 
 export function helpHtml(lang: 'en' | 'ja'): string {
