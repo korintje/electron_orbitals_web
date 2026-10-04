@@ -46,9 +46,9 @@ export function displayPeriod(n: number): number {
 }
 
 /** Phase angle added by time evolution at `millis` (same as ScreenDrawer) */
-export function timePhase(n: number, millis: number, sign = 1): number {
+export function timePhase(n: number, millis: number): number {
   const period = n * n * 1000;
-  return (sign * 2 * Math.PI * (millis % period)) / period;
+  return (2 * Math.PI * (millis % period)) / period;
 }
 
 /** Number in the form 5.6×10⁻⁴ (HTML) */

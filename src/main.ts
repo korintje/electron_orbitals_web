@@ -5,6 +5,7 @@ import { aboutHtml, helpHtml } from './docs';
 import { resolveLanguage, strings } from './i18n';
 import { icon } from './icons';
 import { EDU, infoHtml } from './edu';
+import { CurrentOverlay } from './current';
 import { InputHandler } from './input';
 import { Legend } from './legend';
 import {
@@ -109,7 +110,8 @@ sidebarTitle.className = 'sidebar-title';
 sidebar.append(sidebarTitle);
 
 tools.append(toolbar, legend.root, viewButtons, selector.root);
-app.append(canvas, tools, sidebar);
+const currentOverlay = new CurrentOverlay();
+app.append(canvas, currentOverlay.canvas, tools, sidebar);
 
 // ---------------------------------------------------------------------------
 // Rendering (GLSurfaceView with RENDERMODE_WHEN_DIRTY / CONTINUOUSLY)
@@ -137,7 +139,8 @@ function drawFrame(): void {
   if (section) selector.setPlaneLabel(planeLabel(section));
   const view = viewParams(current.orbital);
   renderer.draw(current.orbital, current.data, transform, millis, lineWidth(), section, view);
-  legend.tick(millis, view.phaseSign);
+  currentOverlay.update(selector.showCurrent, current.orbital, transform, section);
+  legend.tick(millis);
   if (current.orbital.color && pauseTime === 0) requestRender();
 }
 
@@ -175,7 +178,7 @@ function projectionB(o: Orbital): number {
 }
 
 function viewParams(o: Orbital): ViewParams {
-  return { brightness: projectionB(o), phaseSign: selector.flowWithCurrent ? -1 : 1 };
+  return { brightness: projectionB(o) };
 }
 
 function sectionParams(o: Orbital): SectionParams | null {
@@ -533,8 +536,8 @@ infoClose.addEventListener('click', () => toggleInfo(false));
 function updateEdu(o: Orbital): void {
   legend.root.classList.toggle('hidden', !settings.showLegend);
   legend.update(o, settings.colorBlind, lang, selector.section,
-    selector.section ? sectionK(o) : projectionB(o), selector.commonScale);
-  legend.tick(pauseTime > 0 ? pauseTime : Date.now(), selector.flowWithCurrent ? -1 : 1);
+    selector.section ? sectionK(o) : projectionB(o), selector.commonScale, selector.showCurrent);
+  legend.tick(pauseTime > 0 ? pauseTime : Date.now());
   if (!infoPanel.classList.contains('hidden')) {
     infoTitle.textContent = EDU[lang].menuInfo;
     infoBody.innerHTML = infoHtml(o, orbitalNameHtml({ qN: o.n, qL: o.l, qM: o.m, real: o.real }), lang);

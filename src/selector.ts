@@ -86,14 +86,14 @@ export class OrbitalSelector {
   gain = 0;
   /** Web addition: same brightness scale for all orbitals instead of per orbital */
   commonScale = false;
-  /** Web addition: rotate the phase so that colours flow with the probability current */
-  flowWithCurrent = false;
+  /** Web addition: show arrows of the probability current density */
+  showCurrent = false;
   private readonly sectionRows = document.createElement('div');
   private readonly scaleLabel = document.createElement('span');
-  private readonly flowLabel = document.createElement('span');
+  private readonly currentLabel = document.createElement('span');
   private readonly scaleButtons: HTMLButtonElement[] = [];
-  private readonly flowButtons: HTMLButtonElement[] = [];
-  private flowRow!: HTMLElement;
+  private readonly currentButtons: HTMLButtonElement[] = [];
+  private currentRow!: HTMLElement;
   private readonly sectionChanger = button('icon', '');
   private readonly sectionCaption = document.createElement('div');
   readonly sectionPanel = document.createElement('div');
@@ -289,15 +289,15 @@ export class OrbitalSelector {
       row(this.offsetLabel, this.offsetSlider, this.offsetValue, -1, 1, 0.005,
         () => this.sectionOffset, (v) => (this.sectionOffset = v)),
     );
-    this.flowRow = segmented(this.flowLabel, this.flowButtons, () => this.flowWithCurrent,
-      (v) => (this.flowWithCurrent = v));
+    this.currentRow = segmented(this.currentLabel, this.currentButtons, () => this.showCurrent,
+      (v) => (this.showCurrent = v));
     this.sectionPanel.append(
       this.sectionRows,
       row(this.gainLabel, this.gainSlider, this.gainValue, -2, 2, 0.05,
         () => this.gain, (v) => (this.gain = v)),
       segmented(this.scaleLabel, this.scaleButtons, () => this.commonScale,
         (v) => (this.commonScale = v)),
-      this.flowRow,
+      this.currentRow,
     );
   }
 
@@ -331,17 +331,16 @@ export class OrbitalSelector {
       : `${T.projection}<small>${T.projectionSub}</small>`;
     this.sectionRows.classList.toggle('hidden', !this.section);
     this.scaleLabel.textContent = T.scaleLabel;
-    this.flowLabel.textContent = T.flowLabel;
+    this.currentLabel.textContent = T.currentLabel;
     T.scaleOptions.forEach((t, i) => {
       this.scaleButtons[i].textContent = t;
       this.scaleButtons[i].classList.toggle('active', this.commonScale === (i === 1));
     });
-    T.flowOptions.forEach((t, i) => {
-      this.flowButtons[i].textContent = t;
-      this.flowButtons[i].classList.toggle('active', this.flowWithCurrent === (i === 1));
+    T.currentOptions.forEach((t, i) => {
+      this.currentButtons[i].textContent = t;
+      this.currentButtons[i].classList.toggle('active', this.showCurrent === (i === 1));
     });
-    this.flowRow.title = T.flowTitle;
-    this.flowRow.classList.toggle('dim', !this.color);
+    this.currentRow.title = T.currentTitle;
     this.offsetLabel.textContent = T.sectionOffset;
     this.gainLabel.textContent = T.sectionGain;
     this.offsetValue.textContent = `${(this.sectionOffset * this.rmax).toFixed(1)} a₀`;

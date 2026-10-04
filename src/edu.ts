@@ -42,9 +42,9 @@ export const EDU = {
     resetDefault: 'Reset to default',
     scaleLabel: 'Scale',
     scaleOptions: ['Per orbital', 'Common'],
-    flowLabel: 'Colour flow',
-    flowOptions: ['Phase (E < 0)', 'With current'],
-    flowTitle: 'Direction of the phase rotation: energy measured from the ionisation limit (E < 0), or with the zero of energy lowered so that E > 0, which makes colours flow with the probability current',
+    currentLabel: 'Current j',
+    currentOptions: ['Hide', 'Show arrows'],
+    currentTitle: 'Arrows of the probability current density j = (ħ/μ) Im(ψ* ∇ψ)',
     viewpoint: 'View from',
     viewFrom: (a: string) => `View along the ${a}-axis (tap again for the opposite side)`,
     planeScreen: (d: string) => `Plane parallel to the screen, ${d} a₀ from the nucleus`,
@@ -52,6 +52,11 @@ export const EDU = {
     legendSectionNote: 'dark lines = nodes (ψ = 0)',
     legendSectionDensity: 'Brightness: probability density |ψ|² on the plane',
     legendSectionUnit: 'a₀⁻³',
+    legendCurrent: 'probability current j (length ∝ |j|)',
+    legendCurrentSection: 'on the plane; ⊙ toward you, ⊗ away from you',
+    legendCurrentProjection: 'summed along the line of sight, ∫ j ds',
+    legendCurrentZero: 'Probability current j = 0',
+    legendCurrentZeroNote: 'real orbitals and m = 0 carry no current',
     legendPerOrbital: 'per-orbital scale',
     legendCommon: 'common scale (comparable)',
     prefLegend_Title: 'Show legend',
@@ -89,9 +94,9 @@ export const EDU = {
     resetDefault: '初期値に戻す',
     scaleLabel: '明るさの基準',
     scaleOptions: ['軌道ごと', '全軌道共通'],
-    flowLabel: '色の流れ',
-    flowOptions: ['位相 (E < 0)', '確率の流れ'],
-    flowTitle: '位相の回転方向: 電離極限をエネルギー 0 とする (E < 0) か、エネルギーの基準を下げて E > 0 とし、色が確率の流れと同じ向きに流れるようにするか',
+    currentLabel: '確率流 j',
+    currentOptions: ['非表示', '矢印で表示'],
+    currentTitle: '確率流密度 j = (ħ/μ) Im(ψ* ∇ψ) を矢印で表示',
     viewpoint: '視点',
     viewFrom: (a: string) => `${a} 軸方向から見る(もう一度押すと反対側から)`,
     planeScreen: (d: string) => `画面に平行な面(原子核から ${d} a₀)`,
@@ -99,6 +104,11 @@ export const EDU = {
     legendSectionNote: '暗い線 = 節 (ψ = 0)',
     legendSectionDensity: '明るさ: 断面上の確率密度 |ψ|²',
     legendSectionUnit: 'a₀⁻³',
+    legendCurrent: '確率流 j(長さ ∝ |j|)',
+    legendCurrentSection: '断面上の値。⊙ 手前向き、⊗ 奥向き',
+    legendCurrentProjection: '視線方向に積算した ∫ j ds',
+    legendCurrentZero: '確率流 j = 0',
+    legendCurrentZeroNote: '実関数と m = 0 では流れがない',
     legendPerOrbital: '軌道ごとの基準',
     legendCommon: '全軌道共通の基準(比較可)',
     prefLegend_Title: '凡例を表示',
@@ -152,6 +162,10 @@ export function infoHtml(o: Orbital, nameHtml: string, lang: Lang): string {
       am: '角運動量',
       amRow: `|L| = √(l(l+1)) ħ = ${Lstr} ħ、` +
         (o.real && o.m !== 0 ? 'L<sub>z</sub> は確定しない' : `L<sub>z</sub> = mħ = ${o.m} ħ`),
+      cur: '確率流',
+      curRow: !o.real && o.m !== 0
+        ? `j = (ħ/μ) Im(ψ*∇ψ) = (mħ/μ) |ψ|² / (r sin θ) φ̂。この軌道では z 軸の周りを${o.m > 0 ? '反時計回り' : '時計回り'}(+z 側から見て)に流れ、時間変化しない(定常電流)。z 軸上と節では 0。向きは L<sub>z</sub> = mħ の符号と対応する。「確率流 j」の矢印で表示できる。`
+        : `j = (ħ/μ) Im(ψ*∇ψ) = 0。${o.real ? '実関数は +m と −m の流れが打ち消し合った定在波なので、確率の流れがない。' : 'm = 0 では φ 方向に位相が変化しないので、流れがない。'}`,
       nodes: '節(ψ = 0 となる面)',
       nodeRows: [
         `動径方向の節(球面): n − l − 1 = ${nr} 個`,
@@ -168,7 +182,7 @@ export function infoHtml(o: Orbital, nameHtml: string, lang: Lang): string {
         '各画素は、その視線に沿って積算した値を表す投影像(X 線写真のようなもの)で、断面図や等値面ではない。',
         '明るさ: 確率密度 |ψ|² の視線積算 N = ∫|ψ|² ds を 1 − e<sup>−bN</sup> で圧縮したもの。b は標準では軌道ごとに調整されるため、異なる軌道どうしで明るさは比較できない。「明るさの基準」を「全軌道共通」にすると、全軌道で同じ b(2p 軌道の値)を使うので比較できる。モノクロ表示はこの明るさだけを表示する。',
         '色: 位相 arg ψ(視線上で |ψ|² の重み付き平均)。視線上で位相が打ち消し合うところは白っぽくなる。',
-        '色の流れる向きは位相速度で、エネルギーの基準(ここでは電離極限 = 0)の取り方に依存する。複素関数 (m > 0) の確率の流れ(+φ 向き)とは逆向きに見える。「色の流れ」を「確率の流れ」にすると、エネルギーの基準を下げて E > 0 とした場合に相当する逆回転になり、色は確率の流れと同じ向きに流れる。単一の定常状態では全体の位相は観測できないので、どちらも物理的に同等。',
+        '色の流れる向きは位相速度で、エネルギーの基準(ここでは電離極限 = 0)の取り方に依存する。複素関数 (m > 0) の確率の流れ(+φ 向き)とは逆向きに見える。単一の定常状態では全体の位相は観測できないので、色の流れは電子の運動を表さない。電子の確率の流れは「確率流 j」の矢印で確認できる。',
         '断面表示(はさみのボタン): 画面に平行な平面上の ψ の値を表示する。明るさは確率密度 |ψ|²、色は位相で、節 (ψ = 0) が暗い線として直接見える。ダブルタップで xy・yz・zx 平面に揃い、スライダーで平面を前後に動かせる。',
       ],
     }
@@ -190,6 +204,10 @@ export function infoHtml(o: Orbital, nameHtml: string, lang: Lang): string {
       am: 'Angular momentum',
       amRow: `|L| = √(l(l+1)) ħ = ${Lstr} ħ, ` +
         (o.real && o.m !== 0 ? 'L<sub>z</sub> not definite' : `L<sub>z</sub> = mħ = ${o.m} ħ`),
+      cur: 'Probability current',
+      curRow: !o.real && o.m !== 0
+        ? `j = (ħ/μ) Im(ψ*∇ψ) = (mħ/μ) |ψ|² / (r sin θ) φ̂. In this orbital it circulates ${o.m > 0 ? 'counter-clockwise' : 'clockwise'} around the z-axis (seen from +z) and does not change in time (a steady current). It vanishes on the z-axis and at nodes. Its sense follows the sign of L<sub>z</sub> = mħ. Show it with the Current j arrows.`
+        : `j = (ħ/μ) Im(ψ*∇ψ) = 0. ${o.real ? 'A real orbital is a standing wave in which the currents of +m and −m cancel, so there is no probability current.' : 'With m = 0 the phase does not change along φ, so there is no current.'}`,
       nodes: 'Nodes (surfaces where ψ = 0)',
       nodeRows: [
         `Radial nodes (spheres): n − l − 1 = ${nr}`,
@@ -206,7 +224,7 @@ export function infoHtml(o: Orbital, nameHtml: string, lang: Lang): string {
         'Each pixel shows a value accumulated along its line of sight: a projection, like an X-ray image, not a cross-section or an isosurface.',
         'Brightness: the column probability density N = ∫|ψ|² ds, compressed as 1 − e<sup>−bN</sup>. By default b is adjusted per orbital, so brightness cannot be compared between orbitals. Setting the brightness scale to "Common" uses the same b (that of 2p) for every orbital, so they can be compared. Mono mode shows only this brightness.',
         'Colour: the phase arg ψ (averaged along the line of sight, weighted by |ψ|²). Where phases cancel along the line of sight the colour turns pale.',
-        'The direction in which colours flow is a phase velocity, which depends on the choice of zero energy (here the ionisation limit). For complex orbitals with m > 0 it runs opposite to the probability current (+φ). Setting the colour flow to "With current" reverses the rotation, which corresponds to lowering the zero of energy so that E > 0; colours then flow with the probability current. The overall phase of a single stationary state is not observable, so both are physically equivalent.',
+        'The direction in which colours flow is a phase velocity, which depends on the choice of zero energy (here the ionisation limit). For complex orbitals with m > 0 it runs opposite to the probability current (+φ). The overall phase of a single stationary state is not observable, so the colour flow does not show the electron\'s motion; use the probability current arrows for that.',
         'Cross-section view (scissors button): shows ψ on a plane parallel to the screen. Brightness is the probability density |ψ|², colour is the phase, and nodes (ψ = 0) appear directly as dark lines. Double tap to align with the xy, yz or zx plane, and use the slider to move the plane back and forth.',
       ],
     };
@@ -218,6 +236,7 @@ export function infoHtml(o: Orbital, nameHtml: string, lang: Lang): string {
 <h3>${t.wf}</h3><p class="formula">${psi}</p><p>${t.wfNote}</p>
 <h3>${t.energy}</h3><p>${t.energyRow}</p>
 <h3>${t.am}</h3><p>${t.amRow}</p>
+<h3>${t.cur}</h3><p>${t.curRow}</p>
 <h3>${t.nodes}</h3>${li(t.nodeRows)}
 <h3>${t.size}</h3><p>${t.sizeRow}</p>
 <h3>${t.time}</h3><p>${t.timeRow}</p>

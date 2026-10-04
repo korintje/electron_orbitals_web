@@ -3,6 +3,7 @@ import { EDU } from './edu';
 import { maximumRadius, type Orbital } from './math';
 import { monoColor, phaseColor } from './phasecolor';
 import { BOHR_NM, sci, timePhase, valueAtIntensity } from './physics';
+import { hasCurrent } from './current';
 
 const BAR_H = 10;
 const WHEEL_INTENSITY = 0.8;
@@ -21,6 +22,7 @@ export class Legend {
   private readonly densityText = document.createElement('div');
   private readonly ticks = document.createElement('div');
   private readonly axisText = document.createElement('div');
+  private readonly currentText = document.createElement('div');
   private orbital: Orbital | null = null;
   private colorBlind = -1;
   private lang: 'en' | 'ja' = 'en';
@@ -53,7 +55,9 @@ export class Legend {
     this.densityText.className = 'legend-text';
     this.ticks.className = 'legend-ticks';
     this.axisText.className = 'legend-text legend-axis';
-    this.body.append(this.phase, this.densityText, this.bar, this.ticks, this.axisText);
+    this.currentText.className = 'legend-text legend-current';
+    this.body.append(this.phase, this.densityText, this.bar, this.ticks, this.currentText,
+      this.axisText);
     this.root.append(this.header, this.body);
   }
 
@@ -67,7 +71,7 @@ export class Legend {
    * @param common  whether the brightness scale is common to all orbitals
    */
   update(o: Orbital, colorBlind: number, lang: 'en' | 'ja', section: boolean, k: number,
-    common: boolean): void {
+    common: boolean, showCurrent: boolean): void {
     const sectionK = section ? k : null;
     const T = EDU[lang];
     const changedColor = colorBlind !== this.colorBlind;
@@ -98,6 +102,14 @@ export class Legend {
     parts.push(`<span class="unit">${section ? T.legendSectionUnit : T.legendUnit}</span>`);
     this.ticks.innerHTML = parts.join('');
 
+    this.currentText.classList.toggle('hidden', !showCurrent);
+    if (showCurrent) {
+      this.currentText.innerHTML = hasCurrent(o)
+        ? `<span class="arrow-sample">→</span> ${T.legendCurrent}<br><small>${
+          section ? T.legendCurrentSection : T.legendCurrentProjection}</small>`
+        : `${T.legendCurrentZero}<br><small>${T.legendCurrentZeroNote}</small>`;
+    }
+
     const axis = 0.75 * maximumRadius(o.n, o.l);
     this.axisText.textContent = T.legendAxis(axis.toFixed(1), (axis * BOHR_NM).toFixed(2));
   }
@@ -114,10 +126,10 @@ export class Legend {
   }
 
   /** Move the ± markers of real orbitals with the time-dependent phase. */
-  tick(millis: number, phaseSign: number): void {
+  tick(millis: number): void {
     const o = this.orbital;
     if (!o || !o.color || !o.real) return;
-    const a = timePhase(o.n, millis, phaseSign);
+    const a = timePhase(o.n, millis);
     const r = this.wheelSize / 2 - 8;
     const [plus, minus] = this.markers.children as unknown as HTMLElement[];
     // Canvas y grows downwards; phase angle grows counter-clockwise

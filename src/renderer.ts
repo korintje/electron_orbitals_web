@@ -24,12 +24,10 @@ import type { Settings } from './settings';
 
 type GL = WebGL2RenderingContext;
 
-/** Web addition: brightness and colour-flow options */
+/** Web addition: brightness option */
 export interface ViewParams {
   /** b in the projection intensity 1 − exp(−b ∫|ψ|² ds) (original: R_max²/2) */
   brightness: number;
-  /** +1: phase advances as e^{+i|E|t/ħ} (original); −1: reversed (flows with the current) */
-  phaseSign: number;
 }
 
 /** Web addition: parameters of the cross-section view */
@@ -511,11 +509,11 @@ export class OrbitalRenderer {
     if (section) {
       this.drawSection(invertM(transform), section);
       const tex = orbital.color ? this.sectionColor : this.sectionMono;
-      this.drawScreen(millis, tex, this.width, this.height, view.phaseSign);
+      this.drawScreen(millis, tex, this.width, this.height);
     } else {
       this.integrate(invertM(transform), view.brightness);
       const tex = orbital.color ? this.outColor : this.outMono;
-      this.drawScreen(millis, tex, this.integrationWidth, this.integrationHeight, view.phaseSign);
+      this.drawScreen(millis, tex, this.integrationWidth, this.integrationHeight);
     }
     if (this.settings.showAxes) this.drawAxes(transform, lineWidth);
   }
@@ -574,7 +572,7 @@ export class OrbitalRenderer {
   }
 
   private drawScreen(
-    millis: number, texture: Texture, texW: number, texH: number, phaseSign: number,
+    millis: number, texture: Texture, texW: number, texH: number,
   ): void {
     const gl = this.gl;
     const o = this.data.orbital!;
@@ -588,7 +586,7 @@ export class OrbitalRenderer {
     gl.uniform2f(p.loc('texSize'), texW, texH);
     gl.uniform2i(p.loc('upperClamp'), texW - 1, texH - 1);
     const period = o.n * o.n * 1000; // ms
-    const t = (phaseSign * 2 * Math.PI * (millis % period)) / period;
+    const t = (2 * Math.PI * (millis % period)) / period;
     gl.uniformMatrix2fv(p.loc('colorRotation'), false,
       new Float32Array([Math.cos(t), Math.sin(t), -Math.sin(t), Math.cos(t)]));
     gl.uniform1i(p.loc('colorBlindMode'), this.settings.colorBlind);
